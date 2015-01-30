@@ -1,2 +1,2 @@
-# Breadcrumb-keyword
-SSM 25-1 Breadcrumb keyword extraction
+# Breadcrumb
+SSM 25-1 Breadcrumb
