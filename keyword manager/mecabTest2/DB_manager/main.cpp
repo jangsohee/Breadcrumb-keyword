@@ -6,64 +6,74 @@
 
 using namespace std;
 
-map<string, int> mm;
+map<pair<string,string>, int> stringTypeNum;
 
 int main()
 {
-	string mecabTotalTFName = "../../../../keyword manager DB/4.total_TF_input/00total_TF_input.txt";
+	cout << "***  강석일 회원의 keyword DB를 쌓겠습니다..  ***" << endl;
+
+	string mecabTotalTFName = "../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt";
 	string mecabTotalTFResult = "../../../../keyword manager DB/5.total_TF/00.total_TF_result.txt";
 
 	//preprocess
-	ifstream mecabTatalTF(mecabTotalTFResult.c_str());
+	ifstream ImecabTotalTF(mecabTotalTFResult);
 
 	while(1)
 	{
 		string str;
-		getline(mecabTatalTF, str, '\t');
-		if (mecabTatalTF.eof()) break;
+		getline(ImecabTotalTF, str, '\t');
+		if (ImecabTotalTF.eof()) break;
+
+		string ty;
+		ImecabTotalTF >> ty;
 
 		int num;
-		mecabTatalTF >> num;
+		ImecabTotalTF >> num;
 
-		mm[str]+=num;
+		stringTypeNum[make_pair(str, ty)] += num;
 
-		getline(mecabTatalTF, str, '\n');
+		//'\n' 제거
+		getline(ImecabTotalTF, str, '\n');
 	}
 
-	mecabTatalTF.close();
+	ImecabTotalTF.close();
 
 	//processing
 	while (1)
 	{
-		cout << "continue?";
-		char tmp;
+		cout << "CONTINUE?";
+		string tmp;
 		cin >> tmp;
 
-		if (tmp == 'n') break;
+		if (tmp=="n") break;
 
-		ifstream mecabTotal (mecabTotalTFName.c_str());
+		ifstream ImecabTotal (mecabTotalTFName);
 
 		while (1)
 		{
 			string str;
-			getline(mecabTotal, str, '\t');
-			if (mecabTotal.eof()) break;
+			getline(ImecabTotal, str, '\t');
+			if (ImecabTotal.eof()) break;
+
+			string ty;
+			ImecabTotal >> ty;
 
 			int num;
-			mecabTotal >> num;
+			ImecabTotal >> num;
 			
-			mm[str]+=num;
+			stringTypeNum[make_pair(str,ty)] += num;
 
-			getline(mecabTotal, str, '\n');
+			//'\n' 제거
+			getline(ImecabTotal, str, '\n');
 		}
 
-		mecabTotal.close();
+		ImecabTotal.close();
 	}
 
-	ofstream result(mecabTotalTFResult.c_str());
+	ofstream Oresult(mecabTotalTFResult.c_str());
 
-	map<string, int>::iterator it;
-	for (it = mm.begin(); it != mm.end(); ++it)
-		result << it->first << '\t' << it->second << endl;
+	map<pair<string,string>, int>::iterator it;
+	for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
+		Oresult << it->first.first << '\t' << it->first.second << '\t' << it->second << endl;
 
 }
