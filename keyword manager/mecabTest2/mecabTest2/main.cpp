@@ -21,6 +21,10 @@ int main(int argc, char **argv) {
 
 	while (1)
 	{
+		vector<string> vs;
+		map<pair<string, string>, int> stringTypeNum;
+		multimap<int, pair<string, string> > numStringType;
+
 		cout << "START?" ;
 		string tmp;
 		cin >> tmp;
@@ -45,6 +49,7 @@ int main(int argc, char **argv) {
 		ifstream ImecabInput(mecabInputTXT);
 		ofstream OmecabOutput(mecabOutputTXT);
 
+		
 
 		while (1)
 		{
@@ -170,18 +175,19 @@ int main(int argc, char **argv) {
 		OmecabAnalyze << endl << "----------------------------------------------------------------------------------";
 		OmecabAnalyze << endl;
 
+		ofstream OmecabTotalTF(mecabTotalTFTXT);
+
 		multimap<int, pair<string, string> >::iterator it2;
-		for (it2 = numStringType.begin(); it2 != numStringType.end(); ++it2)
+		for (it2 = numStringType.begin(); it2 != numStringType.end(); ++it2){
 			OmecabAnalyze << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
+			OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
+		}
 
 
 		ImecabOutput.close();
 		OmecabAnalyze.close();
-
-		ofstream OmecabTotalTF(mecabTotalTFTXT);
-
-		for (it2 = numStringType.begin(); it2 != numStringType.end(); ++it2)
-			OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
+		OmecabTotalTF.close();
+		
 
 	}
 	return 0;
