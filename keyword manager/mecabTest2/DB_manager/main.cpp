@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <map>
 #include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -12,38 +13,57 @@ int main()
 	string mecabTotalTFName = "../../../../keyword manager DB/4.total_TF_input/00total_TF_input.txt";
 	string mecabTotalTFResult = "../../../../keyword manager DB/5.total_TF/00.total_TF_result.txt";
 
+	//preprocess
+	ifstream mecabTatalTF(mecabTotalTFResult.c_str());
+
+	while(1)
+	{
+		string str;
+		getline(mecabTatalTF, str, '\t');
+		if (mecabTatalTF.eof()) break;
+
+		int num;
+		mecabTatalTF >> num;
+
+		mm[str]+=num;
+
+		getline(mecabTatalTF, str, '\n');
+	}
+
+	mecabTatalTF.close();
+
+	//processing
 	while (1)
 	{
-		freopen(mecabTotalTFName.c_str(), "r", stdin);
+		cout << "continue?";
+		char tmp;
+		cin >> tmp;
+
+		if (tmp == 'n') break;
+
+		ifstream mecabTotal (mecabTotalTFName.c_str());
 
 		while (1)
 		{
 			string str;
-			getline(cin, str, '\t');
-			if (cin.eof()) break;
+			getline(mecabTotal, str, '\t');
+			if (mecabTotal.eof()) break;
 
 			int num;
-			cin >> num;
+			mecabTotal >> num;
+			
+			mm[str]+=num;
 
-			mm[str]++;
-
-			getchar();
-
+			getline(mecabTotal, str, '\n');
 		}
 
-		int kk = fclose(stdin);
-		
-		cout << "continue?";
-		char tmp;
-		cin >> tmp;
-		int kkd;
-		cin >> kkd;
-		if (tmp == 'n') break;
+		mecabTotal.close();
 	}
 
-	freopen(mecabTotalTFResult.c_str(), "w+", stdout);
+	ofstream result(mecabTotalTFResult.c_str());
+
 	map<string, int>::iterator it;
 	for (it = mm.begin(); it != mm.end(); ++it)
-		cout << it->first << " " << it->second << endl;
+		result << it->first << '\t' << it->second << endl;
 
 }
