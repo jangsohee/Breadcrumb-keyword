@@ -1,9 +1,10 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <Windows.h>
 #include <map>
 #include <string>
 #include <fstream>
 #include <math.h>
+#include <limits>
 
 using namespace std;
 
@@ -11,11 +12,13 @@ map<pair<string,string>, double> stringTypeNum;
 
 int main()
 {
-	cout << "***  °­¼®ÀÏ È¸¿øÀÇ keyword DB¸¦ ½×°Ú½À´Ï´Ù..  ***" << endl;
+	cout << "***  ê°•ì„ì¼ íšŒì›ì˜ keyword DBë¥¼ ìŒ“ê² ìŠµë‹ˆë‹¤..  ***" << endl;
 
 	string mecabTotalTFName = "../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt";
 	string mecabTotalTFResult = "../../../../keyword manager DB/5.total_TF/01.total_TF_result.txt";
 	string mecabCalculateIDF = "../../../../keyword manager DB/6.caclulate_IDF/00.caculate.txt";
+	string mecabBooleanTFTXT = "../../../../keyword manager DB/3-1.boolean_TF/00.booleanTFAnalyzeResult.txt";
+	string mecabTFIDFResult = "../../../../keyword manager DB/7.TF-IDF/00.TFIDFAnalyzeResult.txt";
 
 	//preprocess
 	ifstream ImecabTotalTF(mecabTotalTFResult);
@@ -45,13 +48,13 @@ int main()
 
 		stringTypeNum[make_pair(str, ty)] += num;
 
-		//'\n' Á¦°Å
+		//'\n' ì œê±°
 		getline(ImecabTotalTF, str, '\n');
 	}
 
 	ImecabTotalTF.close();
 
-	//processing
+	
 	while (1)
 	{
 		cout << "CONTINUE?";
@@ -63,6 +66,7 @@ int main()
 
 		ifstream ImecabTotal(mecabTotalTFName);
 
+		//DFê°’ ì¶”ê°€.
 		while (1)
 		{
 			string str;
@@ -77,13 +81,15 @@ int main()
 
 			stringTypeNum[make_pair(str, ty)] += num;
 
-			//'\n' Á¦°Å
+			//'\n' ì œê±°
 			getline(ImecabTotal, str, '\n');
 		}
 
 		ImecabTotal.close();
 		//}
 
+
+		//ì¶”ê°€ëœ DFë¥¼ ê¸°ë¡.
 		ofstream Oresult(mecabTotalTFResult);
 
 		Oresult << endl << documentN << endl;
@@ -101,6 +107,29 @@ int main()
 		Oresult.close();
 		OCaculateIDF.close();
 
+		//IDF calculate
+
+		ifstream ImecabBoolTXT(mecabBooleanTFTXT);
+		ofstream OTFIDFResult(mecabTFIDFResult);
+			
+		while (1)
+		{
+			string noun, ty;
+			double booleanTF;
+			getline(ImecabBoolTXT, noun, '\t');
+			ImecabBoolTXT >> ty >> booleanTF;
+			if (ImecabBoolTXT.eof()) break;
+
+			double DF = stringTypeNum[make_pair(noun, ty)];
+			double IDF = log10(documentN / DF);
+
+			OTFIDFResult << noun << '\t' << ty << '\t' << booleanTF*IDF << endl;
+			string tmp;
+			getline(ImecabBoolTXT, tmp, '\n');
+		}
+		
+		ImecabBoolTXT.close();
+		OTFIDFResult.close();
 
 	}
 }

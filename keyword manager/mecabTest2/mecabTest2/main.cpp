@@ -41,7 +41,8 @@ int main(int argc, char **argv) {
 		string mecabOutputTXT = "../../../../keyword manager DB/2.mecab_output/" + thisTime + "output.txt";
 		string mecabAnalyzeTXT = "../../../../keyword manager DB/3.final/" + thisTime + "analyzeResult.txt";
 		string mecabTotalTFTXT = "../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt";
-
+		string mecabBooleanTFTXT = "../../../../keyword manager DB/3-1.boolean_TF/00.booleanTFAnalyzeResult.txt";
+			
 		//mecab engine 구동
 		MeCab::Tagger *tagger = MeCab::createTagger("-r C:/librarys/mecab-ko/mecabrc -d C:/librarys/mecab-ko/dic/mecab-ko-dic-1.6.1");
 		CHECK(tagger);
@@ -297,17 +298,22 @@ int main(int argc, char **argv) {
 		double totalNoun = 0;
 		double totalEnglishNoun = 0;
 
+		ofstream OBooleanTFTXT(mecabBooleanTFTXT);
+
 		multimap<int, pair<string, string> >::iterator it2;
 		for (it2 = numStringType.begin(); it2 != numStringType.end(); ++it2){
 			OmecabAnalyze << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
 			OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
-			
+			OBooleanTFTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
+
 			totalNoun += (*it2).first;
 			if ((*it2).second.second == "SL") totalEnglishNoun += (*it2).first;
 		}
 
 		double englishP = totalEnglishNoun / totalNoun;
 		OmecabAnalyze << "total : " << totalNoun << '\t' << "english : " << totalEnglishNoun << '\t' << "english/total : " << englishP << endl;
+
+		//OBooleanTFTXT << "total : " << totalNoun << '\t' << "english : " << totalEnglishNoun << '\t' << "english/total : " << englishP << endl;
 
 		ImecabOutput.close();
 		OmecabAnalyze.close();
