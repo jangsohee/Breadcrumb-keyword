@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
 		multimap<int, pair<string, string> >::iterator it2;
 		for (it2 = numStringType.begin(); it2 != numStringType.end(); ++it2){
 			OmecabAnalyze << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
-			OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
+			OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
 		}
 
 
