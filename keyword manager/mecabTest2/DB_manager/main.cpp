@@ -58,10 +58,10 @@ int main()
 		string tmp;
 		cin >> tmp;
 
-		if (tmp=="n") break;
+		if (tmp == "n") break;
 		documentN++;
 
-		ifstream ImecabTotal (mecabTotalTFName);
+		ifstream ImecabTotal(mecabTotalTFName);
 
 		while (1)
 		{
@@ -74,28 +74,33 @@ int main()
 
 			int num;
 			ImecabTotal >> num;
-			
-			stringTypeNum[make_pair(str,ty)] += num;
+
+			stringTypeNum[make_pair(str, ty)] += num;
 
 			//'\n' Á¦°Å
 			getline(ImecabTotal, str, '\n');
 		}
 
 		ImecabTotal.close();
+		//}
+
+		ofstream Oresult(mecabTotalTFResult);
+
+		Oresult << endl << documentN << endl;
+		map<pair<string, string>, int>::iterator it;
+		for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
+			Oresult << it->first.first << '\t' << it->first.second << '\t' << it->second << endl;
+
+		ofstream OCaculateIDF(mecabCalculateIDF);
+		for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
+		{
+			double IDF = documentN / it->second;
+			OCaculateIDF << it->first.first << '\t' << it->first.second << '\t' << log10(IDF) << endl;
+		}
+
+		Oresult.close();
+		OCaculateIDF.close();
+
+
 	}
-
-	ofstream Oresult(mecabTotalTFResult);
-
-	Oresult << endl<< documentN << endl;
-	map<pair<string,string>, int>::iterator it;
-	for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
-		Oresult << it->first.first << '\t' << it->first.second << '\t' << it->second << endl;
-
-	ofstream OCaculateIDF(mecabCalculateIDF);
-	for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
-	{
-		double IDF = documentN / it->second;
-		OCaculateIDF << it->first.first << '\t' << it->first.second << '\t' << log10(IDF)<< endl;
-	}
-
 }

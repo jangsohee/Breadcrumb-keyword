@@ -56,7 +56,14 @@ int main(int argc, char **argv) {
 			string input;
 
 			getline(ImecabInput, input, '\n');
-			if (ImecabInput.eof()) break;
+			if (ImecabInput.eof())
+			{
+				const char *result = tagger->parse(input.c_str());
+				CHECK(result);
+
+				OmecabOutput << result << endl;
+				break;
+			}
 
 			if (input == "") continue;
 
@@ -85,8 +92,74 @@ int main(int argc, char **argv) {
 		{
 			string line;
 			getline(ImecabOutput, line, '\n');
-			if (ImecabOutput.eof()) break;
-			if (line.empty() || line[0] == '\t' || line == "EOS") continue;
+			if (ImecabOutput.eof())
+			{
+				if (continuous == true && cnt != 1)
+				{
+					OmecabAnalyze << endl;
+					continuous = false;
+
+					for (int i = 0; i < cnt; ++i)
+					{
+						int j = apstr.find(" ");
+						string tmp = apstr.substr(0, j);
+						apstr.erase(0, j + 1);
+						vs.push_back(tmp);
+					}
+					apstr.erase();
+
+					//apstr 작업
+					for (int i = 2; i <= cnt; ++i)
+					{
+						for (int k = 0; k + i <= vs.size(); ++k)
+						{
+							string appendStr;
+							for (int j = 0; j < i; ++j)
+							{
+								appendStr += (vs[k + j] + " ");
+							}
+							stringTypeNum[make_pair(appendStr, "MyCompound")]++;
+						}
+					}
+					vs.clear();
+					cnt = 0;
+				}
+				break;
+			}
+			if (line.empty() || line[0] == '\t' || line == "EOS")
+			{
+				if (continuous == true && cnt != 1)
+				{
+					OmecabAnalyze << endl;
+					continuous = false;
+
+					for (int i = 0; i < cnt; ++i)
+					{
+						int j = apstr.find(" ");
+						string tmp = apstr.substr(0, j);
+						apstr.erase(0, j + 1);
+						vs.push_back(tmp);
+					}
+					apstr.erase();
+
+					//apstr 작업
+					for (int i = 2; i <= cnt; ++i)
+					{
+						for (int k = 0; k + i <= vs.size(); ++k)
+						{
+							string appendStr;
+							for (int j = 0; j < i; ++j)
+							{
+								appendStr += (vs[k + j] + " ");
+							}
+							stringTypeNum[make_pair(appendStr, "MyCompound")]++;
+						}
+					}
+					vs.clear();
+					cnt = 0;
+				}
+				continue;
+			}
 
 			size_t pos = line.find('\t');
 			string noun = line.substr(0, pos);
@@ -99,20 +172,64 @@ int main(int argc, char **argv) {
 			size_t dotPos = line.find(',', pos + 1);
 			string ty = line.substr(pos + 1, dotPos - pos - 1);
 
-			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" || ty == "SL") && continuous == true)
+
+			// 제일 마지막에 복합명사가 오면 연산 안해준다. 이제 발견....@@@@@@@
+			// 영어는 복합명사 처리 안해준다. 오직 단일명사만 체크.
+			// 영어 단어의 비율 체크 해보자.
+			// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
+
+			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
 			{
 				OmecabAnalyze << noun << '\t' << ty << endl;
 				stringTypeNum[make_pair(noun, ty)]++;
 				apstr.append(noun + " ");
 				cnt++;
 			}
-			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" || ty == "SL")
+			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
 			{
 				OmecabAnalyze << noun << '\t' << ty << endl;
 				stringTypeNum[make_pair(noun, ty)]++;
 				continuous = true;
 				apstr.append(noun + " ");
 				cnt++;
+			}
+			else if (ty == "SL" && continuous == true)
+			{
+				OmecabAnalyze << noun << '\t' << ty << endl;
+				stringTypeNum[make_pair(noun, ty)]++;
+				continuous = false;
+
+				//vs벡터에 단어 하나하나 저장.
+				for (int i = 0; i < cnt; ++i)
+				{
+					int j = apstr.find(" ");
+					string tmp = apstr.substr(0, j);
+					apstr.erase(0, j + 1);
+					vs.push_back(tmp);
+				}
+				apstr.erase();
+
+				//apstr 작업. 복합명사 만들어서 세어보는중.
+				for (int i = 2; i <= cnt; ++i)
+				{
+					for (int k = 0; k + i <= vs.size(); ++k)
+					{
+						string appendStr;
+						for (int j = 0; j < i; ++j)
+						{
+							appendStr += (vs[k + j] + " ");
+						}
+						stringTypeNum[make_pair(appendStr, "MyCompound")]++;
+					}
+				}
+				vs.clear();
+				cnt = 0;
+
+			}
+			else if (ty == "SL")
+			{
+				OmecabAnalyze << noun << '\t' << ty << endl;
+				stringTypeNum[make_pair(noun, ty)]++;
 			}
 			else if (continuous == true && cnt != 1)
 			{
