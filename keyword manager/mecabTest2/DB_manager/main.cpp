@@ -7,7 +7,7 @@
 
 using namespace std;
 
-map<pair<string,string>, int> stringTypeNum;
+map<pair<string,string>, double> stringTypeNum;
 
 int main()
 {
@@ -25,7 +25,7 @@ int main()
 	//getline(ImecabTotalTF, ttmp, '\n');
 	//documentN = atoi(ttmp.c_str());
 
-	int documentN;
+	double documentN;
 
 	ImecabTotalTF >> documentN;
 
@@ -87,7 +87,7 @@ int main()
 		ofstream Oresult(mecabTotalTFResult);
 
 		Oresult << endl << documentN << endl;
-		map<pair<string, string>, int>::iterator it;
+		map<pair<string, string>, double>::iterator it;
 		for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
 			Oresult << it->first.first << '\t' << it->first.second << '\t' << it->second << endl;
 

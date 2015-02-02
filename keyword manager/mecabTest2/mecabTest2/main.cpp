@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
 		string apstr;
 		bool continuous = false;
 		int cnt = 0;
+		
 		while (1)
 		{
 			string line;
@@ -173,8 +174,8 @@ int main(int argc, char **argv) {
 			string ty = line.substr(pos + 1, dotPos - pos - 1);
 
 
-			// 제일 마지막에 복합명사가 오면 연산 안해준다. 이제 발견....@@@@@@@
-			// 영어는 복합명사 처리 안해준다. 오직 단일명사만 체크.
+			
+			
 			// 영어 단어의 비율 체크 해보자.
 			// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
 
@@ -277,8 +278,7 @@ int main(int argc, char **argv) {
 		map<pair<string, string>, int>::iterator it;
 		for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
 		{
-			OmecabAnalyze << (*it).first.first << '\t' << (*it).first.second
-				<< '\t' << (*it).second << endl;
+			OmecabAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
 			if (maxx < (*it).second)
 			{
 				maxx = (*it).second;
@@ -294,12 +294,20 @@ int main(int argc, char **argv) {
 
 		ofstream OmecabTotalTF(mecabTotalTFTXT);
 
+		double totalNoun = 0;
+		double totalEnglishNoun = 0;
+
 		multimap<int, pair<string, string> >::iterator it2;
 		for (it2 = numStringType.begin(); it2 != numStringType.end(); ++it2){
 			OmecabAnalyze << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
 			OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
+			
+			totalNoun += (*it2).first;
+			if ((*it2).second.second == "SL") totalEnglishNoun += (*it2).first;
 		}
 
+		double englishP = totalEnglishNoun / totalNoun;
+		OmecabAnalyze << "total : " << totalNoun << '\t' << "english : " << totalEnglishNoun << '\t' << "english/total : " << englishP << endl;
 
 		ImecabOutput.close();
 		OmecabAnalyze.close();
