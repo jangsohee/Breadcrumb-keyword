@@ -111,7 +111,8 @@ int main()
 
 		ifstream ImecabBoolTXT(mecabBooleanTFTXT);
 		ofstream OTFIDFResult(mecabTFIDFResult);
-			
+		
+		multimap<double , pair<string, string> > IDFNounType;
 		while (1)
 		{
 			string noun, ty;
@@ -123,11 +124,18 @@ int main()
 			double DF = stringTypeNum[make_pair(noun, ty)];
 			double IDF = log10(documentN / DF);
 
-			OTFIDFResult << noun << '\t' << ty << '\t' << booleanTF*IDF << endl;
+			IDFNounType.insert(make_pair(IDF,make_pair(noun, ty)));
+			
 			string tmp;
 			getline(ImecabBoolTXT, tmp, '\n');
 		}
 		
+		multimap<double, pair<string, string> >::iterator it2;
+		for (it2 = IDFNounType.begin(); it2 != IDFNounType.end(); ++it2)
+		{
+			OTFIDFResult << it2->second.first << '\t' << it2->second.second << '\t' << it2->first << endl;
+		}
+
 		ImecabBoolTXT.close();
 		OTFIDFResult.close();
 

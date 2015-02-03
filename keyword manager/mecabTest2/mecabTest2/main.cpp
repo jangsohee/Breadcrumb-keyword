@@ -41,8 +41,11 @@ int main(int argc, char **argv) {
 		string mecabOutputTXT = "../../../../keyword manager DB/2.mecab_output/" + thisTime + "output.txt";
 		string mecabAnalyzeTXT = "../../../../keyword manager DB/3.final/" + thisTime + "analyzeResult.txt";
 		string mecabTotalTFTXT = "../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt";
+
+		string mecabCountTXT = "../../../../keyword manager DB/3-0.total_TF_input/00.total_TF_input.txt";
 		string mecabBooleanTFTXT = "../../../../keyword manager DB/3-1.boolean_TF/00.booleanTFAnalyzeResult.txt";
-			
+		string mecabIncreaseTXT = "../../../../keyword manager DB/3-2.increase_TF/00.increaseTFAnalyzeResult.txt";
+
 		//mecab engine 구동
 		MeCab::Tagger *tagger = MeCab::createTagger("-r C:/librarys/mecab-ko/mecabrc -d C:/librarys/mecab-ko/dic/mecab-ko-dic-1.6.1");
 		CHECK(tagger);
@@ -82,7 +85,7 @@ int main(int argc, char **argv) {
 		OmecabOutput.close();
 
 
-		//분석모듈
+		//-----------------------분석모듈
 		ifstream ImecabOutput(mecabOutputTXT);
 		ofstream OmecabAnalyze(mecabAnalyzeTXT);
 
@@ -309,6 +312,11 @@ int main(int argc, char **argv) {
 			totalNoun += (*it2).first;
 			if ((*it2).second.second == "SL") totalEnglishNoun += (*it2).first;
 		}
+
+
+		ofstream OBIncreaseTFTXT(mecabIncreaseTXT);
+
+
 
 		double englishP = totalEnglishNoun / totalNoun;
 		OmecabAnalyze << "total : " << totalNoun << '\t' << "english : " << totalEnglishNoun << '\t' << "english/total : " << englishP << endl;
