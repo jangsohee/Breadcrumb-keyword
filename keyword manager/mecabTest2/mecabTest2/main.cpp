@@ -8,6 +8,7 @@
 #include <vector>
 #include <algorithm>
 #include <time.h>
+#include <math.h>
 
 #include "header.h"
 
@@ -42,9 +43,8 @@ int main(int argc, char **argv) {
 		string mecabAnalyzeTXT = "../../../../keyword manager DB/3.final/" + thisTime + "analyzeResult.txt";
 		string mecabTotalTFTXT = "../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt";
 
-		string mecabCountTXT = "../../../../keyword manager DB/3-0.total_TF_input/00.total_TF_input.txt";
-		string mecabBooleanTFTXT = "../../../../keyword manager DB/3-1.boolean_TF/00.booleanTFAnalyzeResult.txt";
-		string mecabIncreaseTXT = "../../../../keyword manager DB/3-2.increase_TF/00.increaseTFAnalyzeResult.txt";
+		
+		
 
 		//mecab engine 구동
 		MeCab::Tagger *tagger = MeCab::createTagger("-r C:/librarys/mecab-ko/mecabrc -d C:/librarys/mecab-ko/dic/mecab-ko-dic-1.6.1");
@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
 		OmecabAnalyze << "----------------------------------------------------------------------------------" << endl;
 
 		string ans;
-		int maxx = 0;
+		double maxx = 0;
 		map<pair<string, string>, int>::iterator it;
 		for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
 		{
@@ -298,23 +298,36 @@ int main(int argc, char **argv) {
 
 		ofstream OmecabTotalTF(mecabTotalTFTXT);
 
+		string mecabCountTXT = "../../../../keyword manager DB/3-0.simple_count_TF/00.countTFAnalyzeResult.txt";//  *
+		string mecabBooleanTFTXT = "../../../../keyword manager DB/3-1.boolean_TF/00.booleanTFAnalyzeResult.txt";
+		string mecabLogTXT = "../../../../keyword manager DB/3-2.log_TF/00.logTFAnalyzeResult.txt";
+		string mecabIncreaseTXT = "../../../../keyword manager DB/3-3.increase_TF/00.increaseTFAnalyzeResult.txt";
+
 		double totalNoun = 0;
 		double totalEnglishNoun = 0;
 
+
+		ofstream OCountTXT(mecabCountTXT);
 		ofstream OBooleanTFTXT(mecabBooleanTFTXT);
+		ofstream OLogTXT(mecabLogTXT);
+		ofstream OIncreaseTXT(mecabIncreaseTXT);
 
 		multimap<int, pair<string, string> >::iterator it2;
 		for (it2 = numStringType.begin(); it2 != numStringType.end(); ++it2){
 			OmecabAnalyze << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
+			OCountTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl; 
 			OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
-			OBooleanTFTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
+			OBooleanTFTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
+
+			double logTF = log10(((*it2).first) +1);
+			OLogTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << logTF << endl;
+
+			double increaseTF = 0.5 + (0.5 * (*it2).first) / maxx;
+			OIncreaseTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << increaseTF << endl;
 
 			totalNoun += (*it2).first;
 			if ((*it2).second.second == "SL") totalEnglishNoun += (*it2).first;
 		}
-
-
-		ofstream OBIncreaseTFTXT(mecabIncreaseTXT);
 
 
 
@@ -326,7 +339,10 @@ int main(int argc, char **argv) {
 		ImecabOutput.close();
 		OmecabAnalyze.close();
 		OmecabTotalTF.close();
-		
+		OCountTXT.close();
+		OBooleanTFTXT.close();
+		OLogTXT.close();
+		OIncreaseTXT.close();
 
 	}
 	return 0;
