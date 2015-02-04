@@ -175,28 +175,28 @@ int main()
 			getline(ImecabIncreaseTXT, ttmp, '\n');
 		}
 		
-		ofstream OCountTFIDF(BooleanTFIDFResult);
-		ofstream OBooleanTFIDF(simpleCountTFIDFResult);
+		ofstream OCountTFIDF(simpleCountTFIDFResult);
+		ofstream OBooleanTFIDF(BooleanTFIDFResult);
 		ofstream OLogTFIDF(LogTFIDFResult);
 		ofstream OIncreaseTFIDF(IncreaseTFIDFResult);
 
-		multimap<double, pair<string, string> >::iterator it2;
-		for (it2 = cTFIDFNounType.begin(); it2 != cTFIDFNounType.end(); ++it2)
+		multimap<double, pair<string, string> >::reverse_iterator it2;
+		for (it2 = cTFIDFNounType.rbegin(); it2 != cTFIDFNounType.rend(); ++it2)
 		{
 			OCountTFIDF << it2->second.first << '\t' << it2->second.second << '\t' << it2->first << endl;
 		}
 
-		for (it2 = bTFIDFNounType.begin(); it2 != bTFIDFNounType.end(); ++it2)
+		for (it2 = bTFIDFNounType.rbegin(); it2 != bTFIDFNounType.rend(); ++it2)
 		{
 			OBooleanTFIDF << it2->second.first << '\t' << it2->second.second << '\t' << it2->first << endl;
 		}
 
-		for (it2 = lTFIDFNounType.begin(); it2 != lTFIDFNounType.end(); ++it2)
+		for (it2 = lTFIDFNounType.rbegin(); it2 != lTFIDFNounType.rend(); ++it2)
 		{
 			OLogTFIDF << it2->second.first << '\t' << it2->second.second << '\t' << it2->first << endl;
 		}
 
-		for (it2 = iTFIDFNounType.begin(); it2 != iTFIDFNounType.end(); ++it2)
+		for (it2 = iTFIDFNounType.rbegin(); it2 != iTFIDFNounType.rend(); ++it2)
 		{
 			OIncreaseTFIDF << it2->second.first << '\t' << it2->second.second << '\t' << it2->first << endl;
 		}

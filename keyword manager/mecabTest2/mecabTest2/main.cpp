@@ -129,6 +129,11 @@ int main(int argc, char **argv) {
 					vs.clear();
 					cnt = 0;
 				}
+				else if (continuous == true && cnt == 1)
+				{
+					apstr.clear();
+					cnt = 0;
+				}
 				break;
 			}
 			if (line.empty() || line[0] == '\t' || line == "EOS")
@@ -161,6 +166,11 @@ int main(int argc, char **argv) {
 						}
 					}
 					vs.clear();
+					cnt = 0;
+				}
+				else if (continuous == true && cnt == 1)
+				{
+					apstr.clear();
 					cnt = 0;
 				}
 				continue;
