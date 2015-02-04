@@ -133,6 +133,8 @@ int main(int argc, char **argv) {
 				{
 					apstr.clear();
 					cnt = 0;
+					OmecabAnalyze << endl;
+					continuous = false;
 				}
 				break;
 			}
@@ -172,6 +174,8 @@ int main(int argc, char **argv) {
 				{
 					apstr.clear();
 					cnt = 0;
+					OmecabAnalyze << endl;
+					continuous = false;
 				}
 				continue;
 			}
