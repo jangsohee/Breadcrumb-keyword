@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <WinSock2.h>
 #include <fstream>
 #include <mecab.h>
 #include <string>
@@ -12,9 +13,13 @@
 #include <io.h>
 #include <conio.h>
 
+
 #include "header.h"
 
 using namespace std;
+
+#define SERVERIP "127.0.0.1"
+#define PORT 74132
 
 
 // Sample of MeCab::Tagger class.
@@ -22,6 +27,37 @@ int main(int argc, char **argv) {
 
 	cout << "***  keyword analyzer(MECAB)  ***" << endl;
 
+
+	WSADATA wsaData;
+	SOCKET hSocket, clntSock;
+	char msg[100];
+	int strlen;
+	SOCKADDR_IN servAdr,clntAdr;
+	int clntAdrSize;
+
+	WSAStartup(MAKEWORD(2, 2), &wsaData);
+	hSocket = socket(PF_INET, SOCK_STREAM, 0);
+	
+	memset(&servAdr, 0, sizeof(servAdr));
+	servAdr.sin_family = AF_INET;
+	servAdr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servAdr.sin_port = htons(PORT);
+	
+	bind(hSocket, (SOCKADDR*)&servAdr, sizeof(servAdr));
+
+	listen(hSocket, 5);
+
+	clntAdrSize = sizeof(clntAdr);
+	clntSock = accept(hSocket, (SOCKADDR*)&servAdr, &clntAdrSize);
+
+	if (clntSock==-1)
+		cout << "socket error" << endl;
+	else
+		cout << "connected!" << endl;
+
+	
+
+	return 0;
 	while (1)
 	{
 		cout << "START?";
@@ -36,26 +72,20 @@ int main(int argc, char **argv) {
 
 		if (handle == -1)
 		{
-			cout << "?>" << endl;
+			cout << "파일 읽기 오류" << endl;
 			return 0;
 		}
-		//string kk = fd.name;
+		
 		while (chkResult != -1)
 		{
-			string kk = fd.name;
-			//if (!strcmp(fd.name, ".") || !strcmp(fd.name, "..")) {
-			if (kk == "." || kk == ".."){
+			string fdName = fd.name;
+
+			if (fdName == "." || fdName == "..")
+			{
 				chkResult = _findnext(handle, &fd);
 				continue;
 			}
-			cout << fd.name << endl;
-			chkResult = _findnext(handle, &fd);
-		}
 
-		return 0;
-		while (chkResult != -1)
-		{
-			if (fd.name == "." || fd.name == "..") continue;
 			vector<string> vs;
 			map<pair<string, string>, int> stringTypeNum;
 			multimap<int, pair<string, string> > numStringType;
@@ -72,7 +102,7 @@ int main(int argc, char **argv) {
 			string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
 				+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
 
-			string mecabInputTXT = "../../../../datamaker/realCrawling/DB/";// +fd.name
+			string mecabInputTXT = "../../../../datamaker/realCrawling/DB/" + fdName;
 			string mecabOutputTXT = "../../../../keyword manager DB/2.mecab_output/" + thisTime + "output.txt";
 			string mecabAnalyzeTXT = "../../../../keyword manager DB/3.final/" + thisTime + "analyzeResult.txt";
 			string mecabTotalTFTXT = "../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt";

@@ -9,12 +9,36 @@
 
 using namespace std;
 
+#define SERVERIP "127.0.0.1"
+#define PORT 74132
+
 map<pair<string,string>, double> stringTypeNum;
 
 int main()
 {
 	cout << "***  강석일 회원의 keyword DB를 쌓겠습니다..  ***" << endl;
 
+
+	WSADATA wsaData;
+	SOCKET hSocket;
+	char msg[100];
+	int strlen;
+	SOCKADDR_IN servAdr;
+
+	WSAStartup(MAKEWORD(2, 2), &wsaData);
+	hSocket = socket(PF_INET, SOCK_STREAM, 0);
+
+	memset(&servAdr, 0, sizeof(servAdr));
+	servAdr.sin_family = AF_INET;
+	servAdr.sin_port = htons(PORT);
+	servAdr.sin_addr.s_addr = inet_addr(SERVERIP);
+
+	if (connect(hSocket, (SOCKADDR*)&servAdr, sizeof(servAdr)) == SOCKET_ERROR)
+		cout << "connect error" << endl;
+	else
+		cout << "connected!" << endl;
+
+	return 0;
 	string mecabTotalTFName = "../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt";
 	string mecabTotalTFResult = "../../../../keyword manager DB/5.total_TF/01.total_TF_result.txt";
 	string mecabCalculateIDF = "../../../../keyword manager DB/6.caclulate_IDF/00.caculate.txt";

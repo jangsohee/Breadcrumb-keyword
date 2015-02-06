@@ -60,6 +60,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\librarys\mecab-ko\src;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>mecab-system-eval.lib;mecab-test-gen.lib;mecab-cost-train.lib;mecab-dict-gen.lib;mecab.lib;mecab-dict-index.lib;libmecab.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>WS2_32.LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
