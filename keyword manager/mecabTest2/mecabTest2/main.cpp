@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿
+#include <iostream>
 #include <WinSock2.h>
 #include <fstream>
 #include <mecab.h>
@@ -30,8 +31,6 @@ int main(int argc, char **argv) {
 
 	WSADATA wsaData;
 	SOCKET hSocket, clntSock;
-	char msg[100];
-	int strlen;
 	SOCKADDR_IN servAdr,clntAdr;
 	int clntAdrSize;
 
@@ -57,7 +56,7 @@ int main(int argc, char **argv) {
 
 	
 
-	return 0;
+
 	while (1)
 	{
 		cout << "START?";
@@ -90,7 +89,8 @@ int main(int argc, char **argv) {
 			map<pair<string, string>, int> stringTypeNum;
 			multimap<int, pair<string, string> > numStringType;
 
-			//cout << "START?" ;
+			cout << fdName << endl;
+			//cout << "step1?"<<fdName ;
 			//string tmp;
 			//cin >> tmp;
 			//if (tmp == "n") break;
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
 			OmecabOutput.close();
 
 
-			//-----------------------분석모듈
+			//-----------------------분석모듈-------------------------------------------------
 			ifstream ImecabOutput(mecabOutputTXT);
 			ofstream OmecabAnalyze(mecabAnalyzeTXT);
 
@@ -390,18 +390,32 @@ int main(int argc, char **argv) {
 			ofstream OLogTXT(mecabLogTXT);
 			ofstream OIncreaseTXT(mecabIncreaseTXT);
 
+			map<pair<string, string>, double > countMap;
+			map<pair<string, string>, double > booleanMap;
+			map<pair<string, string>, double > logMap;
+			map<pair<string, string>, double > increaseMap;
+
+
+
 			multimap<int, pair<string, string> >::iterator it2;
 			for (it2 = numStringType.begin(); it2 != numStringType.end(); ++it2){
+
 				OmecabAnalyze << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
-				OCountTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
-				OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
-				OBooleanTFTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
+
+
+				countMap.insert(make_pair(make_pair((*it2).second.first, (*it2).second.second), (*it2).first));
+				booleanMap.insert(make_pair(make_pair((*it2).second.first, (*it2).second.second), 1));
 
 				double logTF = log10(((*it2).first) + 1);
-				OLogTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << logTF << endl;
+				logMap.insert(make_pair(make_pair((*it2).second.first, (*it2).second.second), logTF));
 
 				double increaseTF = 0.5 + (0.5 * (*it2).first) / maxx;
-				OIncreaseTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << increaseTF << endl;
+				increaseMap.insert(make_pair(make_pair((*it2).second.first, (*it2).second.second), increaseTF));
+
+
+				//OCountTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << (*it2).first << endl;
+				OmecabTotalTF << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
+				//OBooleanTFTXT << (*it2).second.first << '\t' << (*it2).second.second << '\t' << 1 << endl;
 
 				totalNoun += (*it2).first;
 				if ((*it2).second.second == "SL") totalEnglishNoun += (*it2).first;
@@ -422,7 +436,115 @@ int main(int argc, char **argv) {
 			OLogTXT.close();
 			OIncreaseTXT.close();
 
+
+
+
+
+
+			//---------------------------------------------------indexing모듈 완료----------------------------------------------------------------------
+			char msg[100] = "1";
+			send(clntSock, msg, strlen(msg), 0);
+			int len = recv(clntSock, msg, 99, 0);
+			msg[len] = 0;
+
+			cout << "step2?"<<endl;
+			//cin >> tmp;
+			//if (tmp == "n") break;
+
+
+
+			//IDF calculate
+
+			multimap<double, pair<string, string> > cTFIDFNounType;
+			multimap<double, pair<string, string> > bTFIDFNounType;
+			multimap<double, pair<string, string> > lTFIDFNounType;
+			multimap<double, pair<string, string> > iTFIDFNounType;
+			
+
+			string mecabSelectivDF = "../../../../keyword manager DB/5-1.selectiveDF/00.selectve.txt";
+
+			ifstream ISelectiveTDF(mecabSelectivDF);
+
+			int documentN;
+			
+			ISelectiveTDF >> documentN;
+			string ttmp;
+			getline(ISelectiveTDF, ttmp, '\n');
+			while (1)
+			{
+				string noun, ty;
+				
+				
+				double DF;
+				getline(ISelectiveTDF, noun, '\t');
+				if (ISelectiveTDF.eof()) break;
+				ISelectiveTDF >> ty >> DF;
+
+				double countTF, booleanTF, LogTF, IncreaseTF;
+				countTF = countMap[make_pair(noun, ty)];
+				booleanTF = booleanMap[make_pair(noun, ty)];
+				LogTF = logMap[make_pair(noun, ty)];
+				IncreaseTF = increaseMap[make_pair(noun, ty)];
+
+
+				//해당 단어의 IDF값을 구하고,
+				
+				double IDF = log10(documentN / DF);
+
+				// 상황에 맞는 TF와 곱한다.
+				double cTFIDF = countTF * IDF;
+				double bTFIDF = booleanTF * IDF;
+				double lTFIDF = LogTF * IDF;
+				double iTFIDF = IncreaseTF * IDF;
+
+				cTFIDFNounType.insert(make_pair(cTFIDF, make_pair(noun, ty)));
+				bTFIDFNounType.insert(make_pair(bTFIDF, make_pair(noun, ty)));
+				lTFIDFNounType.insert(make_pair(lTFIDF, make_pair(noun, ty)));
+				iTFIDFNounType.insert(make_pair(iTFIDF, make_pair(noun, ty)));
+
+				string ttmp;
+				
+				getline(ISelectiveTDF, ttmp, '\n');
+			}
+			
+			string simpleCountTFIDFResult = "../../../../keyword manager DB/7-0.simple_count_TF-IDF/" + thisTime + " SimpleCountTFIDFAnalyzeResult.txt";
+			string BooleanTFIDFResult = "../../../../keyword manager DB/7-1.boolean_TF-IDF/" + thisTime + " BooleanTFIDFAnalyzeResult.txt";
+			string LogTFIDFResult = "../../../../keyword manager DB/7-2.log_TF-IDF/" + thisTime + " LogTFIDFAnalyzeResult.txt";
+			string IncreaseTFIDFResult = "../../../../keyword manager DB/7-3.increase_TF-IDF/" + thisTime + " IncreaseTFIDFAnalyzeResult.txt";
+
+			ofstream OCountTFIDF(simpleCountTFIDFResult);
+			ofstream OBooleanTFIDF(BooleanTFIDFResult);
+			ofstream OLogTFIDF(LogTFIDFResult);
+			ofstream OIncreaseTFIDF(IncreaseTFIDFResult);
+
+
+			multimap<double, pair<string, string> >::reverse_iterator it3;
+			for (it3 = cTFIDFNounType.rbegin(); it3 != cTFIDFNounType.rend(); ++it3)
+			{
+				OCountTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
+			}
+
+			for (it3 = bTFIDFNounType.rbegin(); it3 != bTFIDFNounType.rend(); ++it3)
+			{
+				OBooleanTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
+			}
+
+			for (it3 = lTFIDFNounType.rbegin(); it3 != lTFIDFNounType.rend(); ++it3)
+			{
+				OLogTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
+			}
+
+			for (it3 = iTFIDFNounType.rbegin(); it3 != iTFIDFNounType.rend(); ++it3)
+			{
+				OIncreaseTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
+			}
+
+
+			chkResult = _findnext(handle, &fd);
 		}
+
+		char msg[100] = "0";
+		send(clntSock, msg, strlen(msg), 0);
 	}
 	return 0;
 }

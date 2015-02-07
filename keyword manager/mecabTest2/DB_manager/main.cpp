@@ -38,7 +38,10 @@ int main()
 	else
 		cout << "connected!" << endl;
 
-	return 0;
+	
+	
+
+
 	string mecabTotalTFName = "../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt";
 	string mecabTotalTFResult = "../../../../keyword manager DB/5.total_TF/01.total_TF_result.txt";
 	string mecabCalculateIDF = "../../../../keyword manager DB/6.caclulate_IDF/00.caculate.txt";
@@ -80,14 +83,27 @@ int main()
 	
 	while (1)
 	{
-		cout << "CONTINUE?";
-		string tmp;
-		cin >> tmp;
+		cout << "CONTINUE?"<<endl;
+		//string tmp;
+		//cin >> tmp;
+		//if (tmp == "n") break;
 
-		if (tmp == "n") break;
+		int len = recv(hSocket, msg, 99, 0);
+		msg[len] = 0;
+		
+		if (!strcmp(msg, "0")){
+			cout << "수고했다. 내일보자. 이메시지를 볼 수 있음 좋겠다" << endl;
+			return 0;
+		}
+
 		documentN++;
 
+		string mecabSelectivDF = "../../../../keyword manager DB/5-1.selectiveDF/00.selectve.txt";
+
 		ifstream ImecabTotal(mecabTotalTFName);
+		ofstream OselectiveDF(mecabSelectivDF);
+
+		OselectiveDF << endl << documentN << endl;
 
 		//DF값 추가.
 		while (1)
@@ -102,6 +118,10 @@ int main()
 			int num;
 			ImecabTotal >> num;
 
+			double selectedNum = stringTypeNum[make_pair(str, ty)];
+
+			OselectiveDF << str << '\t' << ty << '\t' << selectedNum+num << endl;
+			
 			stringTypeNum[make_pair(str, ty)] += num;
 
 			//'\n' 제거
@@ -120,19 +140,26 @@ int main()
 		for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
 			Oresult << it->first.first << '\t' << it->first.second << '\t' << it->second << endl;
 
+
+		/*
 		ofstream OCaculateIDF(mecabCalculateIDF);
 		for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
 		{
 			double IDF = documentN / it->second;
 			OCaculateIDF << it->first.first << '\t' << it->first.second << '\t' << log10(IDF) << endl;
-		}
+		}*/
 
 		Oresult.close();
-		OCaculateIDF.close();
+		//OCaculateIDF.close();
+
+		char msg2[100] = "2";
+		send(hSocket, msg2, 99, 0);
+
+
 
 		//IDF calculate
 
-		string mecabSimpleCountTFTXT = "../../../../keyword manager DB/3-0.simple_count_TF/00.countTFAnalyzeResult.txt";
+		/*string mecabSimpleCountTFTXT = "../../../../keyword manager DB/3-0.simple_count_TF/00.countTFAnalyzeResult.txt";
 		string mecabBooleanTFTXT = "../../../../keyword manager DB/3-1.boolean_TF/00.booleanTFAnalyzeResult.txt";
 		string mecabLogTFTXT = "../../../../keyword manager DB/3-2.log_TF/00.logTFAnalyzeResult.txt";
 		string mecabIncreaseTFTXT = "../../../../keyword manager DB/3-3.increase_TF/00.increaseTFAnalyzeResult.txt";
@@ -230,5 +257,8 @@ int main()
 		OBooleanTFIDF.close();
 		OLogTFIDF.close();
 		OIncreaseTFIDF.close();
+		*/
+
+
 	}
 }
