@@ -426,8 +426,7 @@ int main(int argc, char **argv) {
 			double englishP = totalEnglishNoun / totalNoun;
 			OmecabAnalyze << "total : " << totalNoun << '\t' << "english : " << totalEnglishNoun << '\t' << "english/total : " << englishP << endl;
 
-			//OBooleanTFTXT << "total : " << totalNoun << '\t' << "english : " << totalEnglishNoun << '\t' << "english/total : " << englishP << endl;
-
+			
 			ImecabOutput.close();
 			OmecabAnalyze.close();
 			OmecabTotalTF.close();
@@ -444,14 +443,12 @@ int main(int argc, char **argv) {
 			//---------------------------------------------------indexing모듈 완료----------------------------------------------------------------------
 			char msg[100] = "1";
 			send(clntSock, msg, strlen(msg), 0);
+
 			int len = recv(clntSock, msg, 99, 0);
 			msg[len] = 0;
 
 			cout << "step2?"<<endl;
-			//cin >> tmp;
-			//if (tmp == "n") break;
-
-
+			
 
 			//IDF calculate
 
