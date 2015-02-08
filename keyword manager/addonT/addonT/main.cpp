@@ -41,12 +41,12 @@ using std::ifstream;
 ///while문 다 빼버릴 것.
 
 
-void Add(const FunctionCallbackInfo<Value>& args) {
+void CreateObject(const FunctionCallbackInfo<Value>& args) {
 
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
 
-	if (args.Length() < 2) {
+	/*if (args.Length() < 2) {
 		isolate->ThrowException(Exception::TypeError(
 			String::NewFromUtf8(isolate, "Wrong number of arguments")));
 		return;
@@ -56,7 +56,7 @@ void Add(const FunctionCallbackInfo<Value>& args) {
 		isolate->ThrowException(Exception::TypeError(
 			String::NewFromUtf8(isolate, "Wrong arguments")));
 		return;
-	}
+	}*/
 
 
 	//------------------------------------------------------------------------------------------------------------
@@ -126,14 +126,14 @@ void Add(const FunctionCallbackInfo<Value>& args) {
 
 
 
-
+	map<pair<string, string>, int> titleMap;
 	//title 부터 분석.
 	{
 		string titleAnalyzeTXT = "../../../../keyword manager DB1/3-0-0.final_title/" + thisTime + "analyzeResult.txt";
 		ofstream OtitleAnalyze(titleAnalyzeTXT);
 
 		vector<string> vs;
-		map<pair<string, string>, int> titleMap;
+		
 		//multimap<int, pair<string, string> > titleMultiMap;
 
 		string apstr;
@@ -376,14 +376,14 @@ void Add(const FunctionCallbackInfo<Value>& args) {
 	}
 
 
-
+	map<pair<string, string>, int> bodyMap;
 	//body 분석.
 	{
 		string bodyAnalyzeTXT = "../../../../keyword manager DB1/3-0-1.final_body/" + thisTime + "analyzeResult.txt";
 		ofstream ObodyAnalyze(bodyAnalyzeTXT);
 
 		vector<string> vs;
-		map<pair<string, string>, int> bodyMap;
+		
 		//multimap<int, pair<string, string> > titleMultiMap;
 
 		string apstr;
@@ -737,25 +737,64 @@ void Add(const FunctionCallbackInfo<Value>& args) {
 
 	*/
 
+	int size = titleMap.size() + bodyMap.size();
+	
+	Local<Array> nn = Array::New(isolate, size);
+
+	map<pair<string, string>, int>::iterator it;
+	int i = 0;
+	for (it = titleMap.begin(); it != titleMap.end();++it,++i)
+	{
+		nn->Set(i, String::NewFromUtf8(isolate, (*it).first.first.c_str()));
+	}
+	for (it = bodyMap.begin(); it != bodyMap.end(); ++it, ++i)
+	{
+		nn->Set(i, String::NewFromUtf8(isolate, (*it).first.first.c_str()));
+	}
+
+	Local<Array> nt = Array::New(isolate, size);
+	i = 0;
+	for (it = titleMap.begin(); it != titleMap.end(); ++it, ++i)
+	{
+		nt->Set(i, String::NewFromUtf8(isolate, (*it).first.second.c_str()));
+	}
+	for (it = bodyMap.begin(); it != bodyMap.end(); ++it, ++i)
+	{
+		nt->Set(i, String::NewFromUtf8(isolate, (*it).first.second.c_str()));
+	}
+
+	Local<Array> ff = Array::New(isolate, size);
+	i = 0;
+	for (it = titleMap.begin(); it != titleMap.end(); ++it, ++i)
+	{
+		ff->Set(i, Number::New(isolate,(*it).second));
+	}
+	for (it = bodyMap.begin(); it != bodyMap.end(); ++it, ++i)
+	{
+		ff->Set(i, Number::New(isolate, (*it).second));
+	}
+
+	Local<Object> obj = Object::New(isolate);
 
 
+	obj->Set(String::NewFromUtf8(isolate, "noun"), nn);
+	obj->Set(String::NewFromUtf8(isolate, "nounType"), nt);
+	obj->Set(String::NewFromUtf8(isolate, "frequency"), ff);
 
+	args.GetReturnValue().Set(obj);
 
-
-
-
-	double value = args[0]->NumberValue() + args[1]->NumberValue();
+	/*double value = args[0]->NumberValue() + args[1]->NumberValue();
 	Local<Number> num = Number::New(isolate, value);
 
 	Local<String> str = String::NewFromUtf8(isolate, "success!");
 	//std::string ddd = "IUZZANG";
 	args.GetReturnValue().Set(str);
-	//args.GetReturnValue().Set(num);
+	//args.GetReturnValue().Set(num);*/
 
 }
 
-void Init(Handle<Object> exports) {
-	NODE_SET_METHOD(exports, "add", Add);
+void Init(Handle<Object> exports, Handle<Object> module) {
+	NODE_SET_METHOD(module, "exports", CreateObject);
 }
 
 NODE_MODULE(addon, Init)
