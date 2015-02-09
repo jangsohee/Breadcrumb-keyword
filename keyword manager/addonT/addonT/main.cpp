@@ -41,10 +41,11 @@ using std::ifstream;
 ///while문 다 빼버릴 것.
 
 
-void CreateObject(const FunctionCallbackInfo<Value>& args) {
-
+void funcTF(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
+	HandleScope scope(isolate); 
+	
+	
 
 	/*if (args.Length() < 2) {
 		isolate->ThrowException(Exception::TypeError(
@@ -742,10 +743,12 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 	int size = totalMap.size();
 
 	map<pair<string, string>, double>::iterator it;
+
+
 	//한번 출력해서 확인해본다.-------------------------------------------------------------------
 	//이부분나중에 지울 것.
 
-	ofstream otmp("../../../../keyword manager DB1/3-3-0.final_increase_TF/" + thisTime + "analyzeResult.txt");
+	ofstream otmp("../../../../keyword manager DB1/3-3-0.final_increase_TF/00.analyzeResult.txt");
 	for (it = totalMap.begin(); it != totalMap.end(); ++it)
 	{
 		otmp << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
@@ -754,8 +757,6 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 	//--------------------------------------------------------------------------------------
 	
 	Local<Array> nn = Array::New(isolate, size);
-
-	
 	int i = 0;
 	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
 	{
@@ -780,7 +781,7 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 	
 
 	Local<Object> obj = Object::New(isolate);
-
+	
 
 	obj->Set(String::NewFromUtf8(isolate, "noun"), nn);
 	obj->Set(String::NewFromUtf8(isolate, "nounType"), nt);
@@ -798,8 +799,86 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 
 }
 
-void Init(Handle<Object> exports, Handle<Object> module) {
-	NODE_SET_METHOD(module, "exports", CreateObject);
+void tmp(const FunctionCallbackInfo<Value>& args) {
+	Isolate* isolate = Isolate::GetCurrent();
+	HandleScope scope(isolate);
+
+	time_t timer = time(NULL);
+	tm* t = localtime(&timer);
+
+	string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
+		+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
+
+	cout << "calculate!" << endl;
+	//*****누나가 배열로 줄것이라 했는데, 배열로 어떻게 받는지 모른다. 실험을 해보아야 한다.
+	//일단 파일입출력으로 실험 실행.
+	string mecabInputTXT = "../../../../keyword manager DB1/5-1-0.selectiveDF_TF/00.selectve.txt";
+
+	ifstream ImecabInput(mecabInputTXT);
+
+	multimap<double, pair<string, string> > iTFIDFNounType;
+
+
+
+	//사실 이부분 매개변수로 받을 것이다.
+	int documentN;
+	ImecabInput >> documentN;
+	//documentN = args[0]->NumValue();
+
+	//해당 명사와 명사태그, TF를 받아오게끔
+	string ttmp;
+	getline(ImecabInput, ttmp, '\n');
+	while (1)
+	{
+		string noun, ty;
+		int DF;
+		double iTF;
+
+		getline(ImecabInput, noun, '\t');
+
+		if (ImecabInput.eof()) break;
+		ImecabInput >> ty >> DF >> iTF;
+
+		//해당 단어의 IDF값을 구하고,
+
+		double IDF = log10(documentN / DF);
+
+		// 상황에 맞는 TF와 곱한다.
+		double iTFIDF = iTF * IDF;
+
+		iTFIDFNounType.insert(make_pair(iTFIDF, make_pair(noun, ty)));
+
+		string ttmp;
+
+		getline(ImecabInput, ttmp, '\n');
+	}
+
+	string IncreaseTFIDFResult = "../../../../keyword manager DB1/7-3.increase_TF-IDF/" + thisTime + " IncreaseTFIDFAnalyzeResult.txt";
+	ofstream OIncreaseTFIDF(IncreaseTFIDFResult);
+
+
+	multimap<double, pair<string, string> >::reverse_iterator it3;
+
+	for (it3 = iTFIDFNounType.rbegin(); it3 != iTFIDFNounType.rend(); ++it3)
+	{
+		OIncreaseTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
+	}
+
+
+	Local<Array> keyword = Array::New(isolate, 1);
+	keyword->Set(0, String::NewFromUtf8(isolate, iTFIDFNounType.rbegin()->second.first.c_str()));
+
+
+	Local<Object> obj = Object::New(isolate);
+
+	obj->Set(String::NewFromUtf8(isolate, "keyword"), keyword);
+	args.GetReturnValue().Set(obj);
+}
+
+
+void Init(Handle<Object> exports) {
+	NODE_SET_METHOD(exports, "funcTF", funcTF);
+	NODE_SET_METHOD(exports, "funcExtract", tmp);
 }
 
 NODE_MODULE(addon, Init)

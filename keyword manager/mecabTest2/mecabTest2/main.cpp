@@ -48,7 +48,9 @@ int main(int argc, char **argv) {
 	}
 
 	return 0;*/
-	/*
+
+	
+
 	cout << "***  keyword analyzer(MECAB)  ***" << endl;
 	cout << "start!" << endl;
 
@@ -56,9 +58,9 @@ int main(int argc, char **argv) {
 	tm* t = localtime(&timer);
 
 	string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
-		+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
+	+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
 
-
+	/*
 	//title과 body로 받아오게끔
 
 	string mecabInputTXT = "../../../../keyword manager DB1/1.input/input.txt";
@@ -105,519 +107,584 @@ int main(int argc, char **argv) {
 
 	delete tagger;
 
-	
+
 	//OmecabOutput.close();
 
 
 	//---------------------------------------분석모듈-------------------------------------------------
 
-	
+
 
 
 	//title 부터 분석.
 	{
-		string titleAnalyzeTXT = "../../../../keyword manager DB1/3-0-0.final_title/" + thisTime + "analyzeResult.txt";
-		ofstream OtitleAnalyze(titleAnalyzeTXT);
+	string titleAnalyzeTXT = "../../../../keyword manager DB1/3-0-0.final_title/" + thisTime + "analyzeResult.txt";
+	ofstream OtitleAnalyze(titleAnalyzeTXT);
 
-		vector<string> vs;
-		map<pair<string, string>, int> titleMap;
-		//multimap<int, pair<string, string> > titleMultiMap;
+	vector<string> vs;
+	map<pair<string, string>, int> titleMap;
+	//multimap<int, pair<string, string> > titleMultiMap;
 
-		string apstr;
-		bool continuous = false;
-		int cnt = 0;
-		size_t found = 0, found2;
+	string apstr;
+	bool continuous = false;
+	int cnt = 0;
+	size_t found = 0, found2;
 
-		while (1)
-		{
-			found2 = Atitle.find('\n', found);
-			string line = Atitle.substr(found, found2 - found);
+	while (1)
+	{
+	found2 = Atitle.find('\n', found);
+	string line = Atitle.substr(found, found2 - found);
 
-			if (found2 == std::string::npos || line == "EOS")
-			{
-				if (continuous == true && cnt != 1)
-				{
-					OtitleAnalyze << endl;
-					continuous = false;
+	if (found2 == std::string::npos || line == "EOS")
+	{
+	if (continuous == true && cnt != 1)
+	{
+	OtitleAnalyze << endl;
+	continuous = false;
 
-					for (int i = 0; i < cnt; ++i)
-					{
-						int j = apstr.find(" ");
-						string tmp = apstr.substr(0, j);
-						apstr.erase(0, j + 1);
-						vs.push_back(tmp);
-					}
-					apstr.erase();
-
-					//apstr 작업
-					for (int i = 2; i <= cnt; ++i)
-					{
-						for (int k = 0; k + i <= vs.size(); ++k)
-						{
-							string appendStr;
-							for (int j = 0; j < i; ++j)
-							{
-								appendStr += (vs[k + j] + " ");
-							}
-							titleMap[make_pair(appendStr, "MyCompound")]++;
-						}
-					}
-					vs.clear();
-					cnt = 0;
-				}
-				else if (continuous == true && cnt == 1)
-				{
-					apstr.clear();
-					cnt = 0;
-					OtitleAnalyze << endl;
-					continuous = false;
-				}
-				break;
-			}
-
-			if (line.empty() || line[0] == '\t' || line == "EOS")
-			{
-				if (continuous == true && cnt != 1)
-				{
-					OtitleAnalyze << endl;
-					continuous = false;
-
-					for (int i = 0; i < cnt; ++i)
-					{
-						int j = apstr.find(" ");
-						string tmp = apstr.substr(0, j);
-						apstr.erase(0, j + 1);
-						vs.push_back(tmp);
-					}
-					apstr.erase();
-
-					//apstr 작업
-					for (int i = 2; i <= cnt; ++i)
-					{
-						for (int k = 0; k + i <= vs.size(); ++k)
-						{
-							string appendStr;
-							for (int j = 0; j < i; ++j)
-							{
-								appendStr += (vs[k + j] + " ");
-							}
-							titleMap[make_pair(appendStr, "MyCompound")]++;
-						}
-					}
-					vs.clear();
-					cnt = 0;
-				}
-				else if (continuous == true && cnt == 1)
-				{
-					apstr.clear();
-					cnt = 0;
-					OtitleAnalyze << endl;
-					continuous = false;
-				}
-				continue;
-			}
-
-			size_t pos = line.find('\t');
-			string noun = line.substr(0, pos);
-
-			if (noun == "﻿")
-			{
-				cout << "?" << line << endl;
-			}
-
-			size_t dotPos = line.find(',', pos + 1);
-			string ty = line.substr(pos + 1, dotPos - pos - 1);
-
-
-			// 영어 단어의 비율 체크 해보자.
-			// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
-
-			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
-			{
-				OtitleAnalyze << noun << '\t' << ty << endl;
-				titleMap[make_pair(noun, ty)]++;
-				apstr.append(noun + " ");
-				cnt++;
-			}
-			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
-			{
-				OtitleAnalyze << noun << '\t' << ty << endl;
-				titleMap[make_pair(noun, ty)]++;
-				continuous = true;
-				apstr.append(noun + " ");
-				cnt++;
-			}
-			else if (ty == "SL" && continuous == true)
-			{
-				OtitleAnalyze << noun << '\t' << ty << endl;
-				titleMap[make_pair(noun, ty)]++;
-				continuous = false;
-
-				//vs벡터에 단어 하나하나 저장.
-				for (int i = 0; i < cnt; ++i)
-				{
-					int j = apstr.find(" ");
-					string tmp = apstr.substr(0, j);
-					apstr.erase(0, j + 1);
-					vs.push_back(tmp);
-				}
-				apstr.erase();
-
-				//apstr 작업. 복합명사 만들어서 세어보는중.
-				for (int i = 2; i <= cnt; ++i)
-				{
-					for (int k = 0; k + i <= vs.size(); ++k)
-					{
-						string appendStr;
-						for (int j = 0; j < i; ++j)
-						{
-							appendStr += (vs[k + j] + " ");
-						}
-						titleMap[make_pair(appendStr, "MyCompound")]++;
-					}
-				}
-				vs.clear();
-				cnt = 0;
-
-			}
-			else if (ty == "SL")
-			{
-				OtitleAnalyze << noun << '\t' << ty << endl;
-				titleMap[make_pair(noun, ty)]++;
-			}
-			else if (continuous == true && cnt != 1)
-			{
-				OtitleAnalyze << endl;
-				continuous = false;
-
-				for (int i = 0; i < cnt; ++i)
-				{
-					int j = apstr.find(" ");
-					string tmp = apstr.substr(0, j);
-					apstr.erase(0, j + 1);
-					vs.push_back(tmp);
-				}
-				apstr.erase();
-
-				//apstr 작업
-				for (int i = 2; i <= cnt; ++i)
-				{
-					for (int k = 0; k + i <= vs.size(); ++k)
-					{
-						string appendStr;
-						for (int j = 0; j < i; ++j)
-						{
-							appendStr += (vs[k + j] + " ");
-						}
-						titleMap[make_pair(appendStr, "MyCompound")]++;
-					}
-				}
-				vs.clear();
-				cnt = 0;
-			}
-			else
-			{
-				OtitleAnalyze << endl;
-				continuous = false;
-				cnt = 0;
-				apstr.erase();
-			}
-
-
-			found = found2 + 1;
-		}
-
-		OtitleAnalyze << "----------------------------------------------------------------------------------" << endl;
-
-
-		// 타이틀 멀티맵에 값 넣기.
-		// 과연 1번 모듈에선 타이틀 멀티맵이 필요한가?
-		string ans;
-		double maxx = 0;
-		map<pair<string, string>, int>::iterator it;
-		for (it = titleMap.begin(); it != titleMap.end(); ++it)
-		{
-			OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
-			if (maxx < (*it).second)
-			{
-				maxx = (*it).second;
-				ans = (*it).first.first;
-			}
-			//titleMultiMap.insert(pair<int, pair<string, string> >((*it).second, (*it).first));
-		}
-
-		OtitleAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
-		OtitleAnalyze << "keyword : " << ans;
-		OtitleAnalyze << endl << "----------------------------------------------------------------------------------";
-		OtitleAnalyze << endl;
-
-
-		for (it = titleMap.begin(); it != titleMap.end(); ++it)
-		{
-			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
-			OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
-		}
-
-
-		//------------------------------------title 분석 완료---------------------------------------------
+	for (int i = 0; i < cnt; ++i)
+	{
+	int j = apstr.find(" ");
+	string tmp = apstr.substr(0, j);
+	apstr.erase(0, j + 1);
+	vs.push_back(tmp);
 	}
-	
+	apstr.erase();
+
+	//apstr 작업
+	for (int i = 2; i <= cnt; ++i)
+	{
+	for (int k = 0; k + i <= vs.size(); ++k)
+	{
+	string appendStr;
+	for (int j = 0; j < i; ++j)
+	{
+	appendStr += (vs[k + j] + " ");
+	}
+	titleMap[make_pair(appendStr, "MyCompound")]++;
+	}
+	}
+	vs.clear();
+	cnt = 0;
+	}
+	else if (continuous == true && cnt == 1)
+	{
+	apstr.clear();
+	cnt = 0;
+	OtitleAnalyze << endl;
+	continuous = false;
+	}
+	break;
+	}
+
+	if (line.empty() || line[0] == '\t' || line == "EOS")
+	{
+	if (continuous == true && cnt != 1)
+	{
+	OtitleAnalyze << endl;
+	continuous = false;
+
+	for (int i = 0; i < cnt; ++i)
+	{
+	int j = apstr.find(" ");
+	string tmp = apstr.substr(0, j);
+	apstr.erase(0, j + 1);
+	vs.push_back(tmp);
+	}
+	apstr.erase();
+
+	//apstr 작업
+	for (int i = 2; i <= cnt; ++i)
+	{
+	for (int k = 0; k + i <= vs.size(); ++k)
+	{
+	string appendStr;
+	for (int j = 0; j < i; ++j)
+	{
+	appendStr += (vs[k + j] + " ");
+	}
+	titleMap[make_pair(appendStr, "MyCompound")]++;
+	}
+	}
+	vs.clear();
+	cnt = 0;
+	}
+	else if (continuous == true && cnt == 1)
+	{
+	apstr.clear();
+	cnt = 0;
+	OtitleAnalyze << endl;
+	continuous = false;
+	}
+	continue;
+	}
+
+	size_t pos = line.find('\t');
+	string noun = line.substr(0, pos);
+
+	if (noun == "﻿")
+	{
+	cout << "?" << line << endl;
+	}
+
+	size_t dotPos = line.find(',', pos + 1);
+	string ty = line.substr(pos + 1, dotPos - pos - 1);
+
+
+	// 영어 단어의 비율 체크 해보자.
+	// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
+
+	if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
+	{
+	OtitleAnalyze << noun << '\t' << ty << endl;
+	titleMap[make_pair(noun, ty)]++;
+	apstr.append(noun + " ");
+	cnt++;
+	}
+	else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
+	{
+	OtitleAnalyze << noun << '\t' << ty << endl;
+	titleMap[make_pair(noun, ty)]++;
+	continuous = true;
+	apstr.append(noun + " ");
+	cnt++;
+	}
+	else if (ty == "SL" && continuous == true)
+	{
+	OtitleAnalyze << noun << '\t' << ty << endl;
+	titleMap[make_pair(noun, ty)]++;
+	continuous = false;
+
+	//vs벡터에 단어 하나하나 저장.
+	for (int i = 0; i < cnt; ++i)
+	{
+	int j = apstr.find(" ");
+	string tmp = apstr.substr(0, j);
+	apstr.erase(0, j + 1);
+	vs.push_back(tmp);
+	}
+	apstr.erase();
+
+	//apstr 작업. 복합명사 만들어서 세어보는중.
+	for (int i = 2; i <= cnt; ++i)
+	{
+	for (int k = 0; k + i <= vs.size(); ++k)
+	{
+	string appendStr;
+	for (int j = 0; j < i; ++j)
+	{
+	appendStr += (vs[k + j] + " ");
+	}
+	titleMap[make_pair(appendStr, "MyCompound")]++;
+	}
+	}
+	vs.clear();
+	cnt = 0;
+
+	}
+	else if (ty == "SL")
+	{
+	OtitleAnalyze << noun << '\t' << ty << endl;
+	titleMap[make_pair(noun, ty)]++;
+	}
+	else if (continuous == true && cnt != 1)
+	{
+	OtitleAnalyze << endl;
+	continuous = false;
+
+	for (int i = 0; i < cnt; ++i)
+	{
+	int j = apstr.find(" ");
+	string tmp = apstr.substr(0, j);
+	apstr.erase(0, j + 1);
+	vs.push_back(tmp);
+	}
+	apstr.erase();
+
+	//apstr 작업
+	for (int i = 2; i <= cnt; ++i)
+	{
+	for (int k = 0; k + i <= vs.size(); ++k)
+	{
+	string appendStr;
+	for (int j = 0; j < i; ++j)
+	{
+	appendStr += (vs[k + j] + " ");
+	}
+	titleMap[make_pair(appendStr, "MyCompound")]++;
+	}
+	}
+	vs.clear();
+	cnt = 0;
+	}
+	else
+	{
+	OtitleAnalyze << endl;
+	continuous = false;
+	cnt = 0;
+	apstr.erase();
+	}
+
+
+	found = found2 + 1;
+	}
+
+	OtitleAnalyze << "----------------------------------------------------------------------------------" << endl;
+
+
+	// 타이틀 멀티맵에 값 넣기.
+	// 과연 1번 모듈에선 타이틀 멀티맵이 필요한가?
+	string ans;
+	double maxx = 0;
+	map<pair<string, string>, int>::iterator it;
+	for (it = titleMap.begin(); it != titleMap.end(); ++it)
+	{
+	OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+	if (maxx < (*it).second)
+	{
+	maxx = (*it).second;
+	ans = (*it).first.first;
+	}
+	//titleMultiMap.insert(pair<int, pair<string, string> >((*it).second, (*it).first));
+	}
+
+	OtitleAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
+	OtitleAnalyze << "keyword : " << ans;
+	OtitleAnalyze << endl << "----------------------------------------------------------------------------------";
+	OtitleAnalyze << endl;
+
+
+	for (it = titleMap.begin(); it != titleMap.end(); ++it)
+	{
+	double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
+	OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
+	}
+
+
+	//------------------------------------title 분석 완료---------------------------------------------
+	}
+
 
 
 	//body 분석.
 	{
-		string bodyAnalyzeTXT = "../../../../keyword manager DB1/3-0-1.final_body/" + thisTime + "analyzeResult.txt";
-		ofstream ObodyAnalyze(bodyAnalyzeTXT);
+	string bodyAnalyzeTXT = "../../../../keyword manager DB1/3-0-1.final_body/" + thisTime + "analyzeResult.txt";
+	ofstream ObodyAnalyze(bodyAnalyzeTXT);
 
-		vector<string> vs;
-		map<pair<string, string>, int> bodyMap;
-		//multimap<int, pair<string, string> > titleMultiMap;
+	vector<string> vs;
+	map<pair<string, string>, int> bodyMap;
+	//multimap<int, pair<string, string> > titleMultiMap;
 
-		string apstr;
-		bool continuous = false;
-		int cnt = 0;
-		size_t found = 0, found2;
+	string apstr;
+	bool continuous = false;
+	int cnt = 0;
+	size_t found = 0, found2;
 
-		while (1)
-		{
-			found2 = Abody.find('\n', found);
-			string line = Abody.substr(found, found2 - found);
+	while (1)
+	{
+	found2 = Abody.find('\n', found);
+	string line = Abody.substr(found, found2 - found);
 
-			if (found2 == std::string::npos || line == "EOS")
-			{
-				if (continuous == true && cnt != 1)
-				{
-					ObodyAnalyze << endl;
-					continuous = false;
+	if (found2 == std::string::npos || line == "EOS")
+	{
+	if (continuous == true && cnt != 1)
+	{
+	ObodyAnalyze << endl;
+	continuous = false;
 
-					for (int i = 0; i < cnt; ++i)
-					{
-						int j = apstr.find(" ");
-						string tmp = apstr.substr(0, j);
-						apstr.erase(0, j + 1);
-						vs.push_back(tmp);
-					}
-					apstr.erase();
+	for (int i = 0; i < cnt; ++i)
+	{
+	int j = apstr.find(" ");
+	string tmp = apstr.substr(0, j);
+	apstr.erase(0, j + 1);
+	vs.push_back(tmp);
+	}
+	apstr.erase();
 
-					//apstr 작업
-					for (int i = 2; i <= cnt; ++i)
-					{
-						for (int k = 0; k + i <= vs.size(); ++k)
-						{
-							string appendStr;
-							for (int j = 0; j < i; ++j)
-							{
-								appendStr += (vs[k + j] + " ");
-							}
-							bodyMap[make_pair(appendStr, "MyCompound")]++;
-						}
-					}
-					vs.clear();
-					cnt = 0;
-				}
-				else if (continuous == true && cnt == 1)
-				{
-					apstr.clear();
-					cnt = 0;
-					ObodyAnalyze << endl;
-					continuous = false;
-				}
-				break;
-			}
+	//apstr 작업
+	for (int i = 2; i <= cnt; ++i)
+	{
+	for (int k = 0; k + i <= vs.size(); ++k)
+	{
+	string appendStr;
+	for (int j = 0; j < i; ++j)
+	{
+	appendStr += (vs[k + j] + " ");
+	}
+	bodyMap[make_pair(appendStr, "MyCompound")]++;
+	}
+	}
+	vs.clear();
+	cnt = 0;
+	}
+	else if (continuous == true && cnt == 1)
+	{
+	apstr.clear();
+	cnt = 0;
+	ObodyAnalyze << endl;
+	continuous = false;
+	}
+	break;
+	}
 
-			if (line.empty() || line[0] == '\t' || line == "EOS")
-			{
-				if (continuous == true && cnt != 1)
-				{
-					ObodyAnalyze << endl;
-					continuous = false;
+	if (line.empty() || line[0] == '\t' || line == "EOS")
+	{
+	if (continuous == true && cnt != 1)
+	{
+	ObodyAnalyze << endl;
+	continuous = false;
 
-					for (int i = 0; i < cnt; ++i)
-					{
-						int j = apstr.find(" ");
-						string tmp = apstr.substr(0, j);
-						apstr.erase(0, j + 1);
-						vs.push_back(tmp);
-					}
-					apstr.erase();
+	for (int i = 0; i < cnt; ++i)
+	{
+	int j = apstr.find(" ");
+	string tmp = apstr.substr(0, j);
+	apstr.erase(0, j + 1);
+	vs.push_back(tmp);
+	}
+	apstr.erase();
 
-					//apstr 작업
-					for (int i = 2; i <= cnt; ++i)
-					{
-						for (int k = 0; k + i <= vs.size(); ++k)
-						{
-							string appendStr;
-							for (int j = 0; j < i; ++j)
-							{
-								appendStr += (vs[k + j] + " ");
-							}
-							bodyMap[make_pair(appendStr, "MyCompound")]++;
-						}
-					}
-					vs.clear();
-					cnt = 0;
-				}
-				else if (continuous == true && cnt == 1)
-				{
-					apstr.clear();
-					cnt = 0;
-					ObodyAnalyze << endl;
-					continuous = false;
-				}
-				continue;
-			}
+	//apstr 작업
+	for (int i = 2; i <= cnt; ++i)
+	{
+	for (int k = 0; k + i <= vs.size(); ++k)
+	{
+	string appendStr;
+	for (int j = 0; j < i; ++j)
+	{
+	appendStr += (vs[k + j] + " ");
+	}
+	bodyMap[make_pair(appendStr, "MyCompound")]++;
+	}
+	}
+	vs.clear();
+	cnt = 0;
+	}
+	else if (continuous == true && cnt == 1)
+	{
+	apstr.clear();
+	cnt = 0;
+	ObodyAnalyze << endl;
+	continuous = false;
+	}
+	continue;
+	}
 
-			size_t pos = line.find('\t');
-			string noun = line.substr(0, pos);
+	size_t pos = line.find('\t');
+	string noun = line.substr(0, pos);
 
-			if (noun == "﻿")
-			{
-				cout << "?" << line << endl;
-			}
+	if (noun == "﻿")
+	{
+	cout << "?" << line << endl;
+	}
 
-			size_t dotPos = line.find(',', pos + 1);
-			string ty = line.substr(pos + 1, dotPos - pos - 1);
-
-
-			// 영어 단어의 비율 체크 해보자.
-			// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
-
-			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
-			{
-				ObodyAnalyze << noun << '\t' << ty << endl;
-				bodyMap[make_pair(noun, ty)]++;
-				apstr.append(noun + " ");
-				cnt++;
-			}
-			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
-			{
-				ObodyAnalyze << noun << '\t' << ty << endl;
-				bodyMap[make_pair(noun, ty)]++;
-				continuous = true;
-				apstr.append(noun + " ");
-				cnt++;
-			}
-			else if (ty == "SL" && continuous == true)
-			{
-				ObodyAnalyze << noun << '\t' << ty << endl;
-				bodyMap[make_pair(noun, ty)]++;
-				continuous = false;
-
-				//vs벡터에 단어 하나하나 저장.
-				for (int i = 0; i < cnt; ++i)
-				{
-					int j = apstr.find(" ");
-					string tmp = apstr.substr(0, j);
-					apstr.erase(0, j + 1);
-					vs.push_back(tmp);
-				}
-				apstr.erase();
-
-				//apstr 작업. 복합명사 만들어서 세어보는중.
-				for (int i = 2; i <= cnt; ++i)
-				{
-					for (int k = 0; k + i <= vs.size(); ++k)
-					{
-						string appendStr;
-						for (int j = 0; j < i; ++j)
-						{
-							appendStr += (vs[k + j] + " ");
-						}
-						bodyMap[make_pair(appendStr, "MyCompound")]++;
-					}
-				}
-				vs.clear();
-				cnt = 0;
-
-			}
-			else if (ty == "SL")
-			{
-				ObodyAnalyze << noun << '\t' << ty << endl;
-				bodyMap[make_pair(noun, ty)]++;
-			}
-			else if (continuous == true && cnt != 1)
-			{
-				ObodyAnalyze << endl;
-				continuous = false;
-
-				for (int i = 0; i < cnt; ++i)
-				{
-					int j = apstr.find(" ");
-					string tmp = apstr.substr(0, j);
-					apstr.erase(0, j + 1);
-					vs.push_back(tmp);
-				}
-				apstr.erase();
-
-				//apstr 작업
-				for (int i = 2; i <= cnt; ++i)
-				{
-					for (int k = 0; k + i <= vs.size(); ++k)
-					{
-						string appendStr;
-						for (int j = 0; j < i; ++j)
-						{
-							appendStr += (vs[k + j] + " ");
-						}
-						bodyMap[make_pair(appendStr, "MyCompound")]++;
-					}
-				}
-				vs.clear();
-				cnt = 0;
-			}
-			else
-			{
-				ObodyAnalyze << endl;
-				continuous = false;
-				cnt = 0;
-				apstr.erase();
-			}
+	size_t dotPos = line.find(',', pos + 1);
+	string ty = line.substr(pos + 1, dotPos - pos - 1);
 
 
-			found = found2 + 1;
-		}
+	// 영어 단어의 비율 체크 해보자.
+	// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
 
-		ObodyAnalyze << "----------------------------------------------------------------------------------" << endl;
+	if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
+	{
+	ObodyAnalyze << noun << '\t' << ty << endl;
+	bodyMap[make_pair(noun, ty)]++;
+	apstr.append(noun + " ");
+	cnt++;
+	}
+	else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
+	{
+	ObodyAnalyze << noun << '\t' << ty << endl;
+	bodyMap[make_pair(noun, ty)]++;
+	continuous = true;
+	apstr.append(noun + " ");
+	cnt++;
+	}
+	else if (ty == "SL" && continuous == true)
+	{
+	ObodyAnalyze << noun << '\t' << ty << endl;
+	bodyMap[make_pair(noun, ty)]++;
+	continuous = false;
+
+	//vs벡터에 단어 하나하나 저장.
+	for (int i = 0; i < cnt; ++i)
+	{
+	int j = apstr.find(" ");
+	string tmp = apstr.substr(0, j);
+	apstr.erase(0, j + 1);
+	vs.push_back(tmp);
+	}
+	apstr.erase();
+
+	//apstr 작업. 복합명사 만들어서 세어보는중.
+	for (int i = 2; i <= cnt; ++i)
+	{
+	for (int k = 0; k + i <= vs.size(); ++k)
+	{
+	string appendStr;
+	for (int j = 0; j < i; ++j)
+	{
+	appendStr += (vs[k + j] + " ");
+	}
+	bodyMap[make_pair(appendStr, "MyCompound")]++;
+	}
+	}
+	vs.clear();
+	cnt = 0;
+
+	}
+	else if (ty == "SL")
+	{
+	ObodyAnalyze << noun << '\t' << ty << endl;
+	bodyMap[make_pair(noun, ty)]++;
+	}
+	else if (continuous == true && cnt != 1)
+	{
+	ObodyAnalyze << endl;
+	continuous = false;
+
+	for (int i = 0; i < cnt; ++i)
+	{
+	int j = apstr.find(" ");
+	string tmp = apstr.substr(0, j);
+	apstr.erase(0, j + 1);
+	vs.push_back(tmp);
+	}
+	apstr.erase();
+
+	//apstr 작업
+	for (int i = 2; i <= cnt; ++i)
+	{
+	for (int k = 0; k + i <= vs.size(); ++k)
+	{
+	string appendStr;
+	for (int j = 0; j < i; ++j)
+	{
+	appendStr += (vs[k + j] + " ");
+	}
+	bodyMap[make_pair(appendStr, "MyCompound")]++;
+	}
+	}
+	vs.clear();
+	cnt = 0;
+	}
+	else
+	{
+	ObodyAnalyze << endl;
+	continuous = false;
+	cnt = 0;
+	apstr.erase();
+	}
 
 
-		// 타이틀 멀티맵에 값 넣기.
-		// 과연 1번 모듈에선 타이틀 멀티맵이 필요한가?
-		string ans;
-		double maxx = 0;
-		map<pair<string, string>, int>::iterator it;
-		for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
-		{
-			ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
-			if (maxx < (*it).second)
-			{
-				maxx = (*it).second;
-				ans = (*it).first.first;
-			}
-			//titleMultiMap.insert(pair<int, pair<string, string> >((*it).second, (*it).first));
-		}
+	found = found2 + 1;
+	}
 
-		ObodyAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
-		ObodyAnalyze << "keyword : " << ans;
-		ObodyAnalyze << endl << "----------------------------------------------------------------------------------";
-		ObodyAnalyze << endl;
+	ObodyAnalyze << "----------------------------------------------------------------------------------" << endl;
 
 
-		for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
-		{
-			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
-			ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
-		}
+	// 타이틀 멀티맵에 값 넣기.
+	// 과연 1번 모듈에선 타이틀 멀티맵이 필요한가?
+	string ans;
+	double maxx = 0;
+	map<pair<string, string>, int>::iterator it;
+	for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
+	{
+	ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+	if (maxx < (*it).second)
+	{
+	maxx = (*it).second;
+	ans = (*it).first.first;
+	}
+	//titleMultiMap.insert(pair<int, pair<string, string> >((*it).second, (*it).first));
+	}
+
+	ObodyAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
+	ObodyAnalyze << "keyword : " << ans;
+	ObodyAnalyze << endl << "----------------------------------------------------------------------------------";
+	ObodyAnalyze << endl;
+
+
+	for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
+	{
+	double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
+	ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
+	}
 
 
 	}
 
-	
-	return 0;
-	
 	*/
 
+	//---------------------------------------------------indexing모듈 완료----------------------------------------------------------------------
 
-//====================================================실험모듈==================================================
+
+
+
+
+
+	//IDF calculate
+
+cout << "calculate!" << endl;
+	//*****누나가 배열로 줄것이라 했는데, 배열로 어떻게 받는지 모른다. 실험을 해보아야 한다.
+	//일단 파일입출력으로 실험 실행.
+	string mecabInputTXT = "../../../../keyword manager DB1/5-1-0.selectiveDF_TF/00.selectve.txt";
+
+	ifstream ImecabInput(mecabInputTXT);
+
+	multimap<double, pair<string, string> > iTFIDFNounType;
+
+
+
+	//사실 이부분 매개변수로 받을 것이다.
+	int documentN;
+	ImecabInput >> documentN;
+	//documentN = args[0]->NumValue();
+
+	//해당 명사와 명사태그, TF를 받아오게끔
+	string ttmp;
+	getline(ImecabInput, ttmp, '\n');
+	while (1)
+	{
+		string noun, ty;
+		int DF;
+		double iTF;
+
+		getline(ImecabInput, noun, '\t');
+
+		if (ImecabInput.eof()) break;
+		ImecabInput >> ty >> DF >> iTF;
+
+		//해당 단어의 IDF값을 구하고,
+
+		double IDF = log10(documentN / DF);
+
+		// 상황에 맞는 TF와 곱한다.
+		double iTFIDF = iTF * IDF;
+
+		iTFIDFNounType.insert(make_pair(iTFIDF, make_pair(noun, ty)));
+
+		string ttmp;
+
+		getline(ImecabInput, ttmp, '\n');
+	}
+
+	string IncreaseTFIDFResult = "../../../../keyword manager DB1/7-3.increase_TF-IDF/" + thisTime + " IncreaseTFIDFAnalyzeResult.txt";
+	ofstream OIncreaseTFIDF(IncreaseTFIDFResult);
+
+
+	multimap<double, pair<string, string> >::reverse_iterator it3;
+	
+	for (it3 = iTFIDFNounType.rbegin(); it3 != iTFIDFNounType.rend(); ++it3)
+	{
+		OIncreaseTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
+	}
+
+	return 0;
+
+
+
+
+	//===============================================================실험모듈================================================================
 
 
 	cout << "***  keyword analyzer(MECAB)  ***" << endl;
