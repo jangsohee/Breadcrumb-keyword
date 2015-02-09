@@ -122,6 +122,8 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 	OmecabOutput.close();
 
 
+
+	map<pair<string, string>, double> totalMap;
 	//---------------------------------------분석모듈-------------------------------------------------
 
 
@@ -133,8 +135,6 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 		ofstream OtitleAnalyze(titleAnalyzeTXT);
 
 		vector<string> vs;
-		
-		//multimap<int, pair<string, string> > titleMultiMap;
 
 		string apstr;
 		bool continuous = false;
@@ -369,6 +369,7 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 		{
 			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
 			OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
+			totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
 		}
 
 
@@ -619,6 +620,7 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 		{
 			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
 			ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
+			totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
 		}
 
 
@@ -737,42 +739,45 @@ void CreateObject(const FunctionCallbackInfo<Value>& args) {
 
 	*/
 
-	int size = titleMap.size() + bodyMap.size();
+	int size = totalMap.size();
+
+	map<pair<string, string>, double>::iterator it;
+	//한번 출력해서 확인해본다.-------------------------------------------------------------------
+	//이부분나중에 지울 것.
+
+	ofstream otmp("../../../../keyword manager DB1/3-3-0.final_increase_TF/" + thisTime + "analyzeResult.txt");
+	for (it = totalMap.begin(); it != totalMap.end(); ++it)
+	{
+		otmp << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+	}
+	
+	//--------------------------------------------------------------------------------------
 	
 	Local<Array> nn = Array::New(isolate, size);
 
-	map<pair<string, string>, int>::iterator it;
+	
 	int i = 0;
-	for (it = titleMap.begin(); it != titleMap.end();++it,++i)
+	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
 	{
 		nn->Set(i, String::NewFromUtf8(isolate, (*it).first.first.c_str()));
 	}
-	for (it = bodyMap.begin(); it != bodyMap.end(); ++it, ++i)
-	{
-		nn->Set(i, String::NewFromUtf8(isolate, (*it).first.first.c_str()));
-	}
+	
 
 	Local<Array> nt = Array::New(isolate, size);
 	i = 0;
-	for (it = titleMap.begin(); it != titleMap.end(); ++it, ++i)
+	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
 	{
 		nt->Set(i, String::NewFromUtf8(isolate, (*it).first.second.c_str()));
 	}
-	for (it = bodyMap.begin(); it != bodyMap.end(); ++it, ++i)
-	{
-		nt->Set(i, String::NewFromUtf8(isolate, (*it).first.second.c_str()));
-	}
+	
 
 	Local<Array> ff = Array::New(isolate, size);
 	i = 0;
-	for (it = titleMap.begin(); it != titleMap.end(); ++it, ++i)
+	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
 	{
 		ff->Set(i, Number::New(isolate,(*it).second));
 	}
-	for (it = bodyMap.begin(); it != bodyMap.end(); ++it, ++i)
-	{
-		ff->Set(i, Number::New(isolate, (*it).second));
-	}
+	
 
 	Local<Object> obj = Object::New(isolate);
 

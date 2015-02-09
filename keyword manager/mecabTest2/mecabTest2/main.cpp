@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 	}
 
 	return 0;*/
-
+	/*
 	cout << "***  keyword analyzer(MECAB)  ***" << endl;
 	cout << "start!" << endl;
 
@@ -614,7 +614,7 @@ int main(int argc, char **argv) {
 	
 	return 0;
 	
-
+	*/
 
 
 //====================================================실험모듈==================================================
@@ -657,8 +657,8 @@ int main(int argc, char **argv) {
 	long handle;
 	int chkResult = 1;
 
-	//handle = _findfirst("../../../../datamaker/realCrawling/DB/*.*", &fd);
-	handle = _findfirst("../../../../keyword manager DB/1.input/*.*", &fd);
+	handle = _findfirst("../../../../datamaker/realCrawling/DB/*.*", &fd);
+	//handle = _findfirst("../../../../keyword manager DB/1.input/*.*", &fd);
 
 	if (handle == -1)
 	{
@@ -688,8 +688,8 @@ int main(int argc, char **argv) {
 		string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
 			+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
 
-		//string mecabInputTXT = "../../../../datamaker/realCrawling/DB/" + fdName;
-		string mecabInputTXT = "../../../../keyword manager DB/1.input/" + fdName;
+		string mecabInputTXT = "../../../../datamaker/realCrawling/DB/" + fdName;
+		//string mecabInputTXT = "../../../../keyword manager DB/1.input/" + fdName;
 
 		string mecabOutputTXT = "../../../../keyword manager DB/2.mecab_output/" + thisTime + "output.txt";
 		string mecabAnalyzeTXT = "../../../../keyword manager DB/3.final/" + thisTime + "analyzeResult.txt";
