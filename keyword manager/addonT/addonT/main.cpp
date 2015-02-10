@@ -88,9 +88,9 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 
 
 	//------이부분 사실 매개변수로 올 것이다.
-	//title = args[0]->ToString;
-	//body = args[1]->ToString;
-
+	String::Utf8Value param(args[0]->ToString());
+	title = *param;
+	
 
 
 
@@ -779,24 +779,14 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 		ff->Set(i, Number::New(isolate,(*it).second));
 	}
 	
-
 	Local<Object> obj = Object::New(isolate);
 	
 
 	obj->Set(String::NewFromUtf8(isolate, "noun"), nn);
 	obj->Set(String::NewFromUtf8(isolate, "nounType"), nt);
-	obj->Set(String::NewFromUtf8(isolate, "frequency"), ff);
+	obj->Set(String::NewFromUtf8(isolate, "TF"), ff);
 
 	args.GetReturnValue().Set(obj);
-
-	/*double value = args[0]->NumberValue() + args[1]->NumberValue();
-	Local<Number> num = Number::New(isolate, value);
-
-	Local<String> str = String::NewFromUtf8(isolate, "success!");
-	//std::string ddd = "IUZZANG";
-	args.GetReturnValue().Set(str);
-	//args.GetReturnValue().Set(num);*/
-
 }
 
 void tmp(const FunctionCallbackInfo<Value>& args) {
@@ -812,29 +802,63 @@ void tmp(const FunctionCallbackInfo<Value>& args) {
 	cout << "calculate!" << endl;
 	//*****누나가 배열로 줄것이라 했는데, 배열로 어떻게 받는지 모른다. 실험을 해보아야 한다.
 	//일단 파일입출력으로 실험 실행.
-	string mecabInputTXT = "../../../../keyword manager DB1/5-1-0.selectiveDF_TF/00.selectve.txt";
+	
+	//string mecabInputTXT = "../../../../keyword manager DB1/5-1-0.selectiveDF_TF/00.selectve.txt";
+	//ifstream ImecabInput(mecabInputTXT);
 
-	ifstream ImecabInput(mecabInputTXT);
+	
 
-	multimap<double, pair<string, string> > iTFIDFNounType;
-
-
+	multimap<double, pair<string, string> > TFIDFNounType;
 
 	//사실 이부분 매개변수로 받을 것이다.
 	int documentN;
-	ImecabInput >> documentN;
-	//documentN = args[0]->NumValue();
+	//ImecabInput >> documentN;
+	documentN = args[0]->Int32Value();
 
+	Local<Array> Anoun = Local<Array>::Cast(args[1]);
+	Local<Array> AnounType = Local<Array>::Cast(args[2]);
+	Local<Array> ADF = Local<Array>::Cast(args[3]);
+	Local<Array> ATF = Local<Array>::Cast(args[4]);
+
+	int arSize = Anoun->Length();
+	
+	for (int i = 0; i < arSize; ++i)
+	{
+		//noun 받기
+		String::Utf8Value nounPara(Anoun->Get(Integer::New(isolate, i)->ToString()));
+		string noun = *nounPara;
+
+		//nounType 받기
+		String::Utf8Value nounTypePara(AnounType->Get(Integer::New(isolate, i)->ToString()));
+		string nounType = *nounTypePara;
+
+		//freq 받기
+		int DF = ADF->Get(Integer::New(isolate, i))->Int32Value();
+
+		//TF 받기
+		double TF = ATF->Get(Integer::New(isolate, i))->NumberValue();
+
+
+		double IDF = log10(documentN / DF);
+
+		double TFIDF = TF*IDF;
+
+		TFIDFNounType.insert(make_pair(TFIDF, make_pair(noun, nounType)));
+	}
+
+
+
+	/*
 	//해당 명사와 명사태그, TF를 받아오게끔
 	string ttmp;
-	getline(ImecabInput, ttmp, '\n');
+	//getline(ImecabInput, ttmp, '\n');
 	while (1)
 	{
 		string noun, ty;
 		int DF;
 		double iTF;
 
-		getline(ImecabInput, noun, '\t');
+		//getline(ImecabInput, noun, '\t');
 
 		if (ImecabInput.eof()) break;
 		ImecabInput >> ty >> DF >> iTF;
@@ -851,28 +875,21 @@ void tmp(const FunctionCallbackInfo<Value>& args) {
 		string ttmp;
 
 		getline(ImecabInput, ttmp, '\n');
-	}
+	}*/
 
 	string IncreaseTFIDFResult = "../../../../keyword manager DB1/7-3.increase_TF-IDF/" + thisTime + " IncreaseTFIDFAnalyzeResult.txt";
 	ofstream OIncreaseTFIDF(IncreaseTFIDFResult);
-
-
 	multimap<double, pair<string, string> >::reverse_iterator it3;
-
-	for (it3 = iTFIDFNounType.rbegin(); it3 != iTFIDFNounType.rend(); ++it3)
+	for (it3 = TFIDFNounType.rbegin(); it3 != TFIDFNounType.rend(); ++it3)
 	{
 		OIncreaseTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
 	}
 
 
 	Local<Array> keyword = Array::New(isolate, 1);
-	keyword->Set(0, String::NewFromUtf8(isolate, iTFIDFNounType.rbegin()->second.first.c_str()));
+	keyword->Set(0, String::NewFromUtf8(isolate, TFIDFNounType.rbegin()->second.first.c_str()));
 
-
-	Local<Object> obj = Object::New(isolate);
-
-	obj->Set(String::NewFromUtf8(isolate, "keyword"), keyword);
-	args.GetReturnValue().Set(obj);
+	args.GetReturnValue().Set(keyword);
 }
 
 

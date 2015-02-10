@@ -87,10 +87,12 @@ int main()
 	while (1)
 	{
 		cout << "CONTINUE?"<<endl;
+		
+		/*
 		string tmp;
 		cin >> tmp;
 		if (tmp == "n") break;
-
+		*/
 		//******
 		int len = recv(hSocket, msg, 99, 0);
 		msg[len] = 0;

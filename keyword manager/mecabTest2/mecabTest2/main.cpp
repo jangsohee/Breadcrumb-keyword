@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 	return 0;*/
 
 	
-
+	/*
 	cout << "***  keyword analyzer(MECAB)  ***" << endl;
 	cout << "start!" << endl;
 
@@ -59,6 +59,7 @@ int main(int argc, char **argv) {
 
 	string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
 	+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
+	*/
 
 	/*
 	//title과 body로 받아오게끔
@@ -619,12 +620,12 @@ int main(int argc, char **argv) {
 
 
 
-
+/*
 
 
 	//IDF calculate
 
-cout << "calculate!" << endl;
+	cout << "calculate!" << endl;
 	//*****누나가 배열로 줄것이라 했는데, 배열로 어떻게 받는지 모른다. 실험을 해보아야 한다.
 	//일단 파일입출력으로 실험 실행.
 	string mecabInputTXT = "../../../../keyword manager DB1/5-1-0.selectiveDF_TF/00.selectve.txt";
@@ -683,7 +684,7 @@ cout << "calculate!" << endl;
 
 
 
-
+	*/
 	//===============================================================실험모듈================================================================
 
 
