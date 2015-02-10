@@ -719,4 +719,4 @@ void Init(Handle<Object> exports) {
 	NODE_SET_METHOD(exports, "funcExtract", funcExtract);
 }
 
-NODE_MODULE(addon, Init)
+NODE_MODULE(keywords, Init)
