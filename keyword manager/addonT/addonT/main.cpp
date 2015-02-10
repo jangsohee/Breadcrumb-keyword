@@ -33,47 +33,19 @@ using std::cin;
 using std::ofstream;
 using std::ifstream;
 
-
-#define SERVERIP "127.0.0.1"
-#define PORT 74132
-
-
-///while문 다 빼버릴 것.
-
-
 void funcTF(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate); 
 	
-	
-
-	/*if (args.Length() < 2) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong number of arguments")));
-		return;
-	}
-
-	if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong arguments")));
-		return;
-	}*/
-
-
-	//------------------------------------------------------------------------------------------------------------
-
-
 	cout << "***  keyword analyzer(MECAB)  ***" << endl;
 	cout << "start!" << endl;
 
+//실험 환경
+	/*
 	time_t timer = time(NULL);
 	tm* t = localtime(&timer);
-
 	string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
-		+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
-
-
-	//title과 body로 받아오게끔
+	+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
 
 	string mecabInputTXT = "../../../../keyword manager DB1/1.input/input.txt";
 	ifstream ImecabInput(mecabInputTXT);
@@ -85,58 +57,52 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 	getline(ImecabInput, body, '\0');
 
 	ImecabInput.close();
+	*/
 
 
-	//------이부분 사실 매개변수로 올 것이다.
-	String::Utf8Value param(args[0]->ToString());
-	title = *param;
-	
+//서버 환경
+	String::Utf8Value titleParam(args[0]->ToString());
+	string title = *titleParam;
+	String::Utf8Value bodyParam(args[1]->ToString());
+	string body = *bodyParam;
 
-
-
+	String::Utf8Value lineTextParam(args[2]->ToString());
+	string linkText = *lineTextParam;
+	String::Utf8Value parentKeywordParam(args[3]->ToString());
+	string parentKeyword = *parentKeywordParam;
 
 	//mecab engine 구동
 	MeCab::Tagger *tagger = MeCab::createTagger("-r C:/librarys/mecab-ko/mecabrc -d C:/librarys/mecab-ko/dic/mecab-ko-dic-1.6.1");
-	//CHECK(tagger);
-
-
-	// *** 파일 출력 막아 놓았다. 확인 하려면 주석을 풀어야 ***
-
-
-	string mecabOutputTXT = "../../../../keyword manager DB1/2.mecab_output/" + thisTime + "output.txt";
-	ofstream OmecabOutput(mecabOutputTXT);
-
 
 	// Gets tagged result in string format.
 	const char *result = tagger->parse(title.c_str());
-	//CHECK(result);
 	string Atitle = result;
-	OmecabOutput << Atitle << endl<<endl;
-
+	
 	const char *result2 = tagger->parse(body.c_str());
 	string Abody = result2;
+
+	//출력 확인
+	/*
+	string mecabOutputTXT = "../../../../keyword manager DB1/2.mecab_output/" + thisTime + "output.txt";
+	ofstream OmecabOutput(mecabOutputTXT);
+	OmecabOutput << Atitle << endl << endl;
 	OmecabOutput << Abody << endl;
+	OmecabOutput.close();
+	*/
 
 	delete tagger;
 
-
-	OmecabOutput.close();
-
-
-
 	map<pair<string, string>, double> totalMap;
+
 	//---------------------------------------분석모듈-------------------------------------------------
-
-
 
 	map<pair<string, string>, int> titleMap;
 	//title 부터 분석.
 	{
-		string titleAnalyzeTXT = "../../../../keyword manager DB1/3-0-0.final_title/" + thisTime + "analyzeResult.txt";
-		ofstream OtitleAnalyze(titleAnalyzeTXT);
+		//string titleAnalyzeTXT = "../../../../keyword manager DB1/3-0-0.final_title/" + thisTime + "analyzeResult.txt";
+		//ofstream OtitleAnalyze(titleAnalyzeTXT);
 
 		vector<string> vs;
-
 		string apstr;
 		bool continuous = false;
 		int cnt = 0;
@@ -151,7 +117,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			{
 				if (continuous == true && cnt != 1)
 				{
-					OtitleAnalyze << endl;
+					//OtitleAnalyze << endl;
 					continuous = false;
 
 					for (int i = 0; i < cnt; ++i)
@@ -183,7 +149,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 				{
 					apstr.clear();
 					cnt = 0;
-					OtitleAnalyze << endl;
+					//OtitleAnalyze << endl;
 					continuous = false;
 				}
 				break;
@@ -193,7 +159,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			{
 				if (continuous == true && cnt != 1)
 				{
-					OtitleAnalyze << endl;
+					//OtitleAnalyze << endl;
 					continuous = false;
 
 					for (int i = 0; i < cnt; ++i)
@@ -225,7 +191,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 				{
 					apstr.clear();
 					cnt = 0;
-					OtitleAnalyze << endl;
+					//OtitleAnalyze << endl;
 					continuous = false;
 				}
 				continue;
@@ -234,10 +200,12 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			size_t pos = line.find('\t');
 			string noun = line.substr(0, pos);
 
+			/*
 			if (noun == "﻿")
 			{
 				cout << "?" << line << endl;
 			}
+			*/
 
 			size_t dotPos = line.find(',', pos + 1);
 			string ty = line.substr(pos + 1, dotPos - pos - 1);
@@ -248,14 +216,14 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 
 			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
 			{
-				OtitleAnalyze << noun << '\t' << ty << endl;
+				//OtitleAnalyze << noun << '\t' << ty << endl;
 				titleMap[make_pair(noun, ty)]++;
 				apstr.append(noun + " ");
 				cnt++;
 			}
 			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
 			{
-				OtitleAnalyze << noun << '\t' << ty << endl;
+				//OtitleAnalyze << noun << '\t' << ty << endl;
 				titleMap[make_pair(noun, ty)]++;
 				continuous = true;
 				apstr.append(noun + " ");
@@ -263,7 +231,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			}
 			else if (ty == "SL" && continuous == true)
 			{
-				OtitleAnalyze << noun << '\t' << ty << endl;
+				//OtitleAnalyze << noun << '\t' << ty << endl;
 				titleMap[make_pair(noun, ty)]++;
 				continuous = false;
 
@@ -296,12 +264,12 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			}
 			else if (ty == "SL")
 			{
-				OtitleAnalyze << noun << '\t' << ty << endl;
+				//OtitleAnalyze << noun << '\t' << ty << endl;
 				titleMap[make_pair(noun, ty)]++;
 			}
 			else if (continuous == true && cnt != 1)
 			{
-				OtitleAnalyze << endl;
+				//OtitleAnalyze << endl;
 				continuous = false;
 
 				for (int i = 0; i < cnt; ++i)
@@ -331,63 +299,49 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			}
 			else
 			{
-				OtitleAnalyze << endl;
+				//OtitleAnalyze << endl;
 				continuous = false;
 				cnt = 0;
 				apstr.erase();
 			}
-
-
 			found = found2 + 1;
 		}
+		//OtitleAnalyze << "----------------------------------------------------------------------------------" << endl;
 
-		OtitleAnalyze << "----------------------------------------------------------------------------------" << endl;
-
-
-		// 타이틀 멀티맵에 값 넣기.
-		// 과연 1번 모듈에선 타이틀 멀티맵이 필요한가?
 		string ans;
 		double maxx = 0;
 		map<pair<string, string>, int>::iterator it;
 		for (it = titleMap.begin(); it != titleMap.end(); ++it)
 		{
-			OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+			//OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
 			if (maxx < (*it).second)
 			{
 				maxx = (*it).second;
 				ans = (*it).first.first;
 			}
-			//titleMultiMap.insert(pair<int, pair<string, string> >((*it).second, (*it).first));
 		}
 
+		/*
 		OtitleAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
 		OtitleAnalyze << "keyword : " << ans;
 		OtitleAnalyze << endl << "----------------------------------------------------------------------------------";
 		OtitleAnalyze << endl;
-
+		*/
 
 		for (it = titleMap.begin(); it != titleMap.end(); ++it)
 		{
 			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
-			OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
+			//OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
 			totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
 		}
-
-
-		//------------------------------------title 분석 완료---------------------------------------------
 	}
-
 
 	map<pair<string, string>, int> bodyMap;
 	//body 분석.
 	{
-		string bodyAnalyzeTXT = "../../../../keyword manager DB1/3-0-1.final_body/" + thisTime + "analyzeResult.txt";
-		ofstream ObodyAnalyze(bodyAnalyzeTXT);
-
+		//string bodyAnalyzeTXT = "../../../../keyword manager DB1/3-0-1.final_body/" + thisTime + "analyzeResult.txt";
+		//ofstream ObodyAnalyze(bodyAnalyzeTXT);
 		vector<string> vs;
-		
-		//multimap<int, pair<string, string> > titleMultiMap;
-
 		string apstr;
 		bool continuous = false;
 		int cnt = 0;
@@ -402,7 +356,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			{
 				if (continuous == true && cnt != 1)
 				{
-					ObodyAnalyze << endl;
+					//ObodyAnalyze << endl;
 					continuous = false;
 
 					for (int i = 0; i < cnt; ++i)
@@ -434,7 +388,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 				{
 					apstr.clear();
 					cnt = 0;
-					ObodyAnalyze << endl;
+					//ObodyAnalyze << endl;
 					continuous = false;
 				}
 				break;
@@ -444,7 +398,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			{
 				if (continuous == true && cnt != 1)
 				{
-					ObodyAnalyze << endl;
+					//ObodyAnalyze << endl;
 					continuous = false;
 
 					for (int i = 0; i < cnt; ++i)
@@ -476,7 +430,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 				{
 					apstr.clear();
 					cnt = 0;
-					ObodyAnalyze << endl;
+					//ObodyAnalyze << endl;
 					continuous = false;
 				}
 				continue;
@@ -499,14 +453,14 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 
 			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
 			{
-				ObodyAnalyze << noun << '\t' << ty << endl;
+				//ObodyAnalyze << noun << '\t' << ty << endl;
 				bodyMap[make_pair(noun, ty)]++;
 				apstr.append(noun + " ");
 				cnt++;
 			}
 			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
 			{
-				ObodyAnalyze << noun << '\t' << ty << endl;
+				//ObodyAnalyze << noun << '\t' << ty << endl;
 				bodyMap[make_pair(noun, ty)]++;
 				continuous = true;
 				apstr.append(noun + " ");
@@ -514,7 +468,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			}
 			else if (ty == "SL" && continuous == true)
 			{
-				ObodyAnalyze << noun << '\t' << ty << endl;
+				//ObodyAnalyze << noun << '\t' << ty << endl;
 				bodyMap[make_pair(noun, ty)]++;
 				continuous = false;
 
@@ -547,12 +501,12 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			}
 			else if (ty == "SL")
 			{
-				ObodyAnalyze << noun << '\t' << ty << endl;
+				//ObodyAnalyze << noun << '\t' << ty << endl;
 				bodyMap[make_pair(noun, ty)]++;
 			}
 			else if (continuous == true && cnt != 1)
 			{
-				ObodyAnalyze << endl;
+				//ObodyAnalyze << endl;
 				continuous = false;
 
 				for (int i = 0; i < cnt; ++i)
@@ -582,7 +536,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			}
 			else
 			{
-				ObodyAnalyze << endl;
+				//ObodyAnalyze << endl;
 				continuous = false;
 				cnt = 0;
 				apstr.erase();
@@ -591,170 +545,48 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 
 			found = found2 + 1;
 		}
+		//ObodyAnalyze << "----------------------------------------------------------------------------------" << endl;
 
-		ObodyAnalyze << "----------------------------------------------------------------------------------" << endl;
-
-
-		// 타이틀 멀티맵에 값 넣기.
-		// 과연 1번 모듈에선 타이틀 멀티맵이 필요한가?
 		string ans;
 		double maxx = 0;
 		map<pair<string, string>, int>::iterator it;
 		for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
 		{
-			ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+			//ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
 			if (maxx < (*it).second)
 			{
 				maxx = (*it).second;
 				ans = (*it).first.first;
 			}
-			//titleMultiMap.insert(pair<int, pair<string, string> >((*it).second, (*it).first));
 		}
 
+		/*
 		ObodyAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
 		ObodyAnalyze << "keyword : " << ans;
 		ObodyAnalyze << endl << "----------------------------------------------------------------------------------";
 		ObodyAnalyze << endl;
-
+		*/
 
 		for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
 		{
 			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
-			ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
+			//ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
 			totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
 		}
-
-
 	}
-
-
-	
-
-
-
-
-
-	/*
-	//---------------------------------------------------indexing모듈 완료----------------------------------------------------------------------
-	char msg[100] = "1";
-	send(clntSock, msg, strlen(msg), 0);
-
-	int len = recv(clntSock, msg, 99, 0);
-	msg[len] = 0;
-
-	cout << "step2?" << endl;
-
-
-	//IDF calculate
-
-	multimap<double, pair<string, string> > cTFIDFNounType;
-	multimap<double, pair<string, string> > bTFIDFNounType;
-	multimap<double, pair<string, string> > lTFIDFNounType;
-	multimap<double, pair<string, string> > iTFIDFNounType;
-
-
-	string mecabSelectivDF = "../../../../keyword manager DB1/5-1.selectiveDF/00.selectve.txt";
-
-	ifstream ISelectiveTDF(mecabSelectivDF);
-
-	int documentN;
-
-	ISelectiveTDF >> documentN;
-	string ttmp;
-	getline(ISelectiveTDF, ttmp, '\n');
-	while (1)
-	{
-		string noun, ty;
-
-
-		double DF;
-		getline(ISelectiveTDF, noun, '\t');
-		if (ISelectiveTDF.eof()) break;
-		ISelectiveTDF >> ty >> DF;
-
-		double countTF, booleanTF, LogTF, IncreaseTF;
-		countTF = countMap[make_pair(noun, ty)];
-		booleanTF = booleanMap[make_pair(noun, ty)];
-		LogTF = logMap[make_pair(noun, ty)];
-		IncreaseTF = increaseMap[make_pair(noun, ty)];
-
-
-		//해당 단어의 IDF값을 구하고,
-
-		double IDF = log10(documentN / DF);
-
-		// 상황에 맞는 TF와 곱한다.
-		double cTFIDF = countTF * IDF;
-		double bTFIDF = booleanTF * IDF;
-		double lTFIDF = LogTF * IDF;
-		double iTFIDF = IncreaseTF * IDF;
-
-		cTFIDFNounType.insert(make_pair(cTFIDF, make_pair(noun, ty)));
-		bTFIDFNounType.insert(make_pair(bTFIDF, make_pair(noun, ty)));
-		lTFIDFNounType.insert(make_pair(lTFIDF, make_pair(noun, ty)));
-		iTFIDFNounType.insert(make_pair(iTFIDF, make_pair(noun, ty)));
-
-		string ttmp;
-
-		getline(ISelectiveTDF, ttmp, '\n');
-	}
-
-	string simpleCountTFIDFResult = "../../../../keyword manager DB1/7-0.simple_count_TF-IDF/" + thisTime + " SimpleCountTFIDFAnalyzeResult.txt";
-	string BooleanTFIDFResult = "../../../../keyword manager DB1/7-1.boolean_TF-IDF/" + thisTime + " BooleanTFIDFAnalyzeResult.txt";
-	string LogTFIDFResult = "../../../../keyword manager DB1/7-2.log_TF-IDF/" + thisTime + " LogTFIDFAnalyzeResult.txt";
-	string IncreaseTFIDFResult = "../../../../keyword manager DB1/7-3.increase_TF-IDF/" + thisTime + " IncreaseTFIDFAnalyzeResult.txt";
-
-	ofstream OCountTFIDF(simpleCountTFIDFResult);
-	ofstream OBooleanTFIDF(BooleanTFIDFResult);
-	ofstream OLogTFIDF(LogTFIDFResult);
-	ofstream OIncreaseTFIDF(IncreaseTFIDFResult);
-
-
-	multimap<double, pair<string, string> >::reverse_iterator it3;
-	for (it3 = cTFIDFNounType.rbegin(); it3 != cTFIDFNounType.rend(); ++it3)
-	{
-		OCountTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
-	}
-
-	for (it3 = bTFIDFNounType.rbegin(); it3 != bTFIDFNounType.rend(); ++it3)
-	{
-		OBooleanTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
-	}
-
-	for (it3 = lTFIDFNounType.rbegin(); it3 != lTFIDFNounType.rend(); ++it3)
-	{
-		OLogTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
-	}
-
-	for (it3 = iTFIDFNounType.rbegin(); it3 != iTFIDFNounType.rend(); ++it3)
-	{
-		OIncreaseTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
-	}
-
-
-
-
-	char msg[100] = "0";
-	send(clntSock, msg, strlen(msg), 0);
-
-
-	*/
 
 	int size = totalMap.size();
 
 	map<pair<string, string>, double>::iterator it;
 
-
-	//한번 출력해서 확인해본다.-------------------------------------------------------------------
-	//이부분나중에 지울 것.
-
+	//출력확인
+	/* 
 	ofstream otmp("../../../../keyword manager DB1/3-3-0.final_increase_TF/00.analyzeResult.txt");
 	for (it = totalMap.begin(); it != totalMap.end(); ++it)
 	{
 		otmp << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
 	}
-	
-	//--------------------------------------------------------------------------------------
+	*/
 	
 	Local<Array> nn = Array::New(isolate, size);
 	int i = 0;
@@ -763,7 +595,6 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 		nn->Set(i, String::NewFromUtf8(isolate, (*it).first.first.c_str()));
 	}
 	
-
 	Local<Array> nt = Array::New(isolate, size);
 	i = 0;
 	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
@@ -771,7 +602,6 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 		nt->Set(i, String::NewFromUtf8(isolate, (*it).first.second.c_str()));
 	}
 	
-
 	Local<Array> ff = Array::New(isolate, size);
 	i = 0;
 	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
@@ -780,8 +610,6 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 	}
 	
 	Local<Object> obj = Object::New(isolate);
-	
-
 	obj->Set(String::NewFromUtf8(isolate, "noun"), nn);
 	obj->Set(String::NewFromUtf8(isolate, "nounType"), nt);
 	obj->Set(String::NewFromUtf8(isolate, "TF"), ff);
@@ -789,31 +617,55 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 	args.GetReturnValue().Set(obj);
 }
 
-void tmp(const FunctionCallbackInfo<Value>& args) {
+void funcExtract(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
+	
+	cout << "calculate!" << endl;
 
+//실험환경
+	/*
 	time_t timer = time(NULL);
 	tm* t = localtime(&timer);
-
 	string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
 		+ to_string(t->tm_hour) + "-" + to_string(t->tm_min) + "-" + to_string(t->tm_sec);
+	string mecabInputTXT = "../../../../keyword manager DB1/5-1-0.selectiveDF_TF/00.selectve.txt";
+	ifstream ImecabInput(mecabInputTXT);
+	int documentN;
+	ImecabInput >> documentN;
+	//해당 명사와 명사태그, TF를 받아오게끔
+	string ttmp;
+	//getline(ImecabInput, ttmp, '\n');
+	while (1)
+	{
+	string noun, ty;
+	int DF;
+	double iTF;
 
-	cout << "calculate!" << endl;
-	//*****누나가 배열로 줄것이라 했는데, 배열로 어떻게 받는지 모른다. 실험을 해보아야 한다.
-	//일단 파일입출력으로 실험 실행.
+	//getline(ImecabInput, noun, '\t');
+
+	if (ImecabInput.eof()) break;
+	ImecabInput >> ty >> DF >> iTF;
+
+	//해당 단어의 IDF값을 구하고,
+
+	double IDF = log10(documentN / DF);
+
+	// 상황에 맞는 TF와 곱한다.
+	double iTFIDF = iTF * IDF;
+
+	iTFIDFNounType.insert(make_pair(iTFIDF, make_pair(noun, ty)));
+
+	string ttmp;
+
+	getline(ImecabInput, ttmp, '\n');
+	}
+	*/
 	
-	//string mecabInputTXT = "../../../../keyword manager DB1/5-1-0.selectiveDF_TF/00.selectve.txt";
-	//ifstream ImecabInput(mecabInputTXT);
-
-	
-
+//서버 환경
 	multimap<double, pair<string, string> > TFIDFNounType;
 
-	//사실 이부분 매개변수로 받을 것이다.
-	int documentN;
-	//ImecabInput >> documentN;
-	documentN = args[0]->Int32Value();
+	int documentN = args[0]->Int32Value();
 
 	Local<Array> Anoun = Local<Array>::Cast(args[1]);
 	Local<Array> AnounType = Local<Array>::Cast(args[2]);
@@ -838,7 +690,6 @@ void tmp(const FunctionCallbackInfo<Value>& args) {
 		//TF 받기
 		double TF = ATF->Get(Integer::New(isolate, i))->NumberValue();
 
-
 		double IDF = log10(documentN / DF);
 
 		double TFIDF = TF*IDF;
@@ -846,37 +697,7 @@ void tmp(const FunctionCallbackInfo<Value>& args) {
 		TFIDFNounType.insert(make_pair(TFIDF, make_pair(noun, nounType)));
 	}
 
-
-
-	/*
-	//해당 명사와 명사태그, TF를 받아오게끔
-	string ttmp;
-	//getline(ImecabInput, ttmp, '\n');
-	while (1)
-	{
-		string noun, ty;
-		int DF;
-		double iTF;
-
-		//getline(ImecabInput, noun, '\t');
-
-		if (ImecabInput.eof()) break;
-		ImecabInput >> ty >> DF >> iTF;
-
-		//해당 단어의 IDF값을 구하고,
-
-		double IDF = log10(documentN / DF);
-
-		// 상황에 맞는 TF와 곱한다.
-		double iTFIDF = iTF * IDF;
-
-		iTFIDFNounType.insert(make_pair(iTFIDF, make_pair(noun, ty)));
-
-		string ttmp;
-
-		getline(ImecabInput, ttmp, '\n');
-	}*/
-
+	/* 출력 확인
 	string IncreaseTFIDFResult = "../../../../keyword manager DB1/7-3.increase_TF-IDF/" + thisTime + " IncreaseTFIDFAnalyzeResult.txt";
 	ofstream OIncreaseTFIDF(IncreaseTFIDFResult);
 	multimap<double, pair<string, string> >::reverse_iterator it3;
@@ -884,7 +705,7 @@ void tmp(const FunctionCallbackInfo<Value>& args) {
 	{
 		OIncreaseTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
 	}
-
+	*/
 
 	Local<Array> keyword = Array::New(isolate, 1);
 	keyword->Set(0, String::NewFromUtf8(isolate, TFIDFNounType.rbegin()->second.first.c_str()));
@@ -895,7 +716,7 @@ void tmp(const FunctionCallbackInfo<Value>& args) {
 
 void Init(Handle<Object> exports) {
 	NODE_SET_METHOD(exports, "funcTF", funcTF);
-	NODE_SET_METHOD(exports, "funcExtract", tmp);
+	NODE_SET_METHOD(exports, "funcExtract", funcExtract);
 }
 
 NODE_MODULE(addon, Init)
