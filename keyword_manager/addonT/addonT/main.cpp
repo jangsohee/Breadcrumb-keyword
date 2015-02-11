@@ -842,23 +842,14 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 	*/
 
 	Local<Array> nn = Array::New(isolate, size);
+	Local<Array> nt = Array::New(isolate, size);
+	Local<Array> ff = Array::New(isolate, size);
+
 	int i = 0;
 	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
 	{
 		nn->Set(i, String::NewFromUtf8(isolate, (*it).first.first.c_str()));
-	}
-
-	Local<Array> nt = Array::New(isolate, size);
-	i = 0;
-	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
-	{
 		nt->Set(i, String::NewFromUtf8(isolate, (*it).first.second.c_str()));
-	}
-
-	Local<Array> ff = Array::New(isolate, size);
-	i = 0;
-	for (it = totalMap.begin(); it != totalMap.end(); ++it, ++i)
-	{
 		ff->Set(i, Number::New(isolate, (*it).second));
 	}
 

@@ -350,11 +350,12 @@ int main(int argc, char **argv) {
 			}
 			OFAnlayze << "===================================================================================" << endl<<endl;
 
+//타이틀 가중치
 			OFAnlayze << "====================================ascend sort====================================" << endl;
 			multimap<double, pair<string, string> >::iterator it2;
 			for (it2 = mm.begin(); it2 != mm.end(); ++it2)
 			{
-				double increaseTF = 0.5 + (0.5 * (*it2).first) / maxx;
+				double increaseTF = 0 + (0.5 * (*it2).first) / maxx;
 				totalMap[make_pair((*it2).second.first, (*it2).second.second)] += increaseTF;
 				OFAnlayze << (*it2).second.first << '\t' << (*it2).second.second << '\t' << increaseTF << endl;
 			}
@@ -602,6 +603,8 @@ int main(int argc, char **argv) {
 			OFAnlayze << "===================================================================================" << endl<<endl;
 
 			OFAnlayze << "====================================ascend sort====================================" << endl;
+
+//바디 가중치
 			multimap<double, pair<string, string> >::iterator it2;
 			for (it2 = mm.begin(); it2 != mm.end(); ++it2)
 			{

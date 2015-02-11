@@ -7,6 +7,7 @@
 #include <math.h>
 #include <limits>
 #include <time.h>
+#include <vector>
 
 #pragma comment(lib, "node.lib")
 
@@ -22,6 +23,7 @@ using std::cout;
 using std::getline;
 using std::ifstream;
 using std::ofstream;
+using std::vector;
 
 #define SERVERIP "127.0.0.1"
 #define PORT 74132
@@ -32,155 +34,55 @@ void Add(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
 
-	if (args.Length() < 2) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong number of arguments")));
-		return;
-	}
+	ifstream iDB("./01.total_TF_result.txt");
 
-	if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong arguments")));
-		return;
-	}
-
-	cout << "***  강석일 회원의 keyword DB를 쌓겠습니다..  ***" << endl;
-
-
-	WSADATA wsaData;
-	SOCKET hSocket;
-	char msg[100];
-	int strlen;
-	SOCKADDR_IN servAdr;
-
-	WSAStartup(MAKEWORD(2, 2), &wsaData);
-	hSocket = socket(PF_INET, SOCK_STREAM, 0);
-
-	memset(&servAdr, 0, sizeof(servAdr));
-	servAdr.sin_family = AF_INET;
-	servAdr.sin_port = htons(PORT);
-	servAdr.sin_addr.s_addr = inet_addr(SERVERIP);
-
-	if (connect(hSocket, (SOCKADDR*)&servAdr, sizeof(servAdr)) == SOCKET_ERROR)
-		cout << "connect error" << endl;
-	else
-		cout << "connected!" << endl;
-
-
-
-
-
-	string mecabTotalTFName = "../../../../keyword manager DB1/4.total_TF_input/00.total_TF_input.txt";
-	string mecabTotalTFResult = "../../../../keyword manager DB1/5.total_TF/01.total_TF_result.txt";
-	string mecabCalculateIDF = "../../../../keyword manager DB1/6.caclulate_IDF/00.caculate.txt";
-
-	//preprocess
-	ifstream ImecabTotalTF(mecabTotalTFResult);
-
-	string ttmp;
-	getline(ImecabTotalTF, ttmp, '\n');
-
-	double documentN;
-
-	ImecabTotalTF >> documentN;
-
-	getline(ImecabTotalTF, ttmp, '\n');
-
+	int historyTotalNum;
+	iDB >> historyTotalNum;
+	
+	string tmp;
+	getline(iDB, tmp, '\n');
+	
+	vector<string> nn;
+	vector<string> nt;
+	vector<int>ff;
 	while (1)
 	{
-		string str;
-		getline(ImecabTotalTF, str, '\t');
-		if (ImecabTotalTF.eof()) break;
+		string noun;
+		getline(iDB, noun, '\t');
+		if (iDB.eof()) break;
+		nn.push_back(noun);
 
-		string ty;
-		ImecabTotalTF >> ty;
+		string type;
+		iDB >> type;
+		nt.push_back(type);
 
-		int num;
-		ImecabTotalTF >> num;
+		int DF;
+		iDB >> DF;
+		ff.push_back(DF);
 
-		stringTypeNum[make_pair(str, ty)] += num;
+		getline(iDB, tmp, '\n');
+	}
+	cout << "?";
+	int size = nn.size();
+	Local<Array> noun = Array::New(isolate, size);
+	Local<Array> nounType = Array::New(isolate, size);
+	Local<Array> DF = Array::New(isolate, size);
 
-		//'\n' 제거
-		getline(ImecabTotalTF, str, '\n');
+	for (int i=0; i<size; ++i)
+	{ 
+		noun->Set(i, String::NewFromUtf8(isolate, nn[i].c_str()));
+		nounType->Set(i, String::NewFromUtf8(isolate, nt[i].c_str()));
+		DF->Set(i, Number::New(isolate, ff[i]));
 	}
 
-	ImecabTotalTF.close();
+	Local<Object> obj = Object::New(isolate);
+	obj->Set(String::NewFromUtf8(isolate, "historyTotalNum"), Number::New(isolate, historyTotalNum));
+	obj->Set(String::NewFromUtf8(isolate, "noun"), noun);
+	obj->Set(String::NewFromUtf8(isolate, "nounType"), nounType);
+	obj->Set(String::NewFromUtf8(isolate, "TF"), DF);
+	//obj->Set(String::NewFromUtf8(isolate, "ParentKeyword"), String::NewFromUtf8(isolate, parentKeyword.c_str()));
 
-
-	while (1)
-	{
-		cout << "CONTINUE?" << endl;
-		//string tmp;
-		//cin >> tmp;
-		//if (tmp == "n") break;
-
-		int len = recv(hSocket, msg, 99, 0);
-		msg[len] = 0;
-
-		if (!strcmp(msg, "0")){
-			cout << "종료중..." << endl;
-			break;
-		}
-
-		documentN++;
-
-		string mecabSelectivDF = "../../../../keyword manager DB1/5-1.selectiveDF/00.selectve.txt";
-
-		ifstream ImecabTotal(mecabTotalTFName);
-		ofstream OselectiveDF(mecabSelectivDF);
-
-		OselectiveDF << endl << documentN << endl;
-
-		//DF값 추가.
-		while (1)
-		{
-			string str;
-			getline(ImecabTotal, str, '\t');
-			if (ImecabTotal.eof()) break;
-
-			string ty;
-			ImecabTotal >> ty;
-
-			int num;
-			ImecabTotal >> num;
-
-			double selectedNum = stringTypeNum[make_pair(str, ty)];
-
-			OselectiveDF << str << '\t' << ty << '\t' << selectedNum + num << endl;
-
-			stringTypeNum[make_pair(str, ty)] += num;
-
-			//'\n' 제거
-			getline(ImecabTotal, str, '\n');
-		}
-
-		ImecabTotal.close();
-
-		char msg2[100] = "2";
-		send(hSocket, msg2, 99, 0);
-
-	}
-
-	//추가된 DF를 기록.
-	ofstream Oresult(mecabTotalTFResult);
-
-	Oresult << endl << documentN << endl;
-	map<pair<string, string>, double>::iterator it;
-	for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
-		Oresult << it->first.first << '\t' << it->first.second << '\t' << it->second << endl;
-
-
-	Oresult.close();
-
-
-
-
-
-
-	double value = args[0]->NumberValue() + args[1]->NumberValue();
-	Local<Number> num = Number::New(isolate, value);
-
-	args.GetReturnValue().Set(num);
+	args.GetReturnValue().Set(obj);
 }
 
 void Init(Handle<Object> exports) {
