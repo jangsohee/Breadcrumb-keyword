@@ -770,7 +770,6 @@ int main(int argc, char **argv) {
 		ifstream ImecabInput(mecabInputTXT);
 		ofstream OmecabOutput(mecabOutputTXT);
 
-
 		string title;
 		getline(ImecabInput, title, '\n');
 
@@ -822,14 +821,15 @@ int main(int argc, char **argv) {
 		//ofstream OmecabAnalyze(mecabAnalyzeTXT);
 
 		map<pair<string, string>, double> totalMap;
+		
+		ofstream OFAnlayze("../../../../keyword manager DB/3-3-0.finalTF/" + thisTime + "analyzeResult.txt");
 
 		//---------------------------------------분석모듈-------------------------------------------------
 
 		map<pair<string, string>, int> titleMap;
 		//title 부터 분석.
 		{
-			string titleAnalyzeTXT = "../../../../keyword manager DB1/3-0-0.final_title/" + thisTime + "analyzeResult.txt";
-			ofstream OtitleAnalyze(titleAnalyzeTXT);
+			
 
 			vector<string> vs;
 			string apstr;
@@ -846,7 +846,7 @@ int main(int argc, char **argv) {
 				{
 					if (continuous == true && cnt != 1)
 					{
-						OtitleAnalyze << endl;
+						OFAnlayze << endl;
 						continuous = false;
 
 						for (int i = 0; i < cnt; ++i)
@@ -878,7 +878,7 @@ int main(int argc, char **argv) {
 					{
 						apstr.clear();
 						cnt = 0;
-						OtitleAnalyze << endl;
+						OFAnlayze << endl;
 						continuous = false;
 					}
 					break;
@@ -888,7 +888,7 @@ int main(int argc, char **argv) {
 				{
 					if (continuous == true && cnt != 1)
 					{
-						OtitleAnalyze << endl;
+						OFAnlayze << endl;
 						continuous = false;
 
 						for (int i = 0; i < cnt; ++i)
@@ -920,7 +920,7 @@ int main(int argc, char **argv) {
 					{
 						apstr.clear();
 						cnt = 0;
-						OtitleAnalyze << endl;
+						OFAnlayze << endl;
 						continuous = false;
 					}
 					continue;
@@ -945,14 +945,14 @@ int main(int argc, char **argv) {
 
 				if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
 				{
-					OtitleAnalyze << noun << '\t' << ty << endl;
+					OFAnlayze << noun << '\t' << ty << endl;
 					titleMap[make_pair(noun, ty)]++;
 					apstr.append(noun + " ");
 					cnt++;
 				}
 				else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
 				{
-					OtitleAnalyze << noun << '\t' << ty << endl;
+					OFAnlayze << noun << '\t' << ty << endl;
 					titleMap[make_pair(noun, ty)]++;
 					continuous = true;
 					apstr.append(noun + " ");
@@ -960,7 +960,7 @@ int main(int argc, char **argv) {
 				}
 				else if (ty == "SL" && continuous == true)
 				{
-					OtitleAnalyze << noun << '\t' << ty << endl;
+					OFAnlayze << noun << '\t' << ty << endl;
 					titleMap[make_pair(noun, ty)]++;
 					continuous = false;
 
@@ -993,12 +993,12 @@ int main(int argc, char **argv) {
 				}
 				else if (ty == "SL")
 				{
-					OtitleAnalyze << noun << '\t' << ty << endl;
+					OFAnlayze << noun << '\t' << ty << endl;
 					titleMap[make_pair(noun, ty)]++;
 				}
 				else if (continuous == true && cnt != 1)
 				{
-					OtitleAnalyze << endl;
+					OFAnlayze << endl;
 					continuous = false;
 
 					for (int i = 0; i < cnt; ++i)
@@ -1028,14 +1028,14 @@ int main(int argc, char **argv) {
 				}
 				else
 				{
-					OtitleAnalyze << endl;
+					OFAnlayze << endl;
 					continuous = false;
 					cnt = 0;
 					apstr.erase();
 				}
 				found = found2 + 1;
 			}
-			OtitleAnalyze << "----------------------------------------------------------------------------------" << endl;
+			OFAnlayze << "----------------------------------------------------------------------------------" << endl;
 
 			string ans;
 			double maxx = 0;
@@ -1050,17 +1050,17 @@ int main(int argc, char **argv) {
 				}
 			}
 
-			/*
-			OtitleAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
-			OtitleAnalyze << "keyword : " << ans;
-			OtitleAnalyze << endl << "----------------------------------------------------------------------------------";
-			OtitleAnalyze << endl;
-			*/
+			
+			OFAnlayze << endl << "----------------------------------------------------------------------------------" << endl;
+			OFAnlayze << "Titlekeyword : " << ans;
+			OFAnlayze << endl << "----------------------------------------------------------------------------------";
+			OFAnlayze << endl;
+			
 
 			for (it = titleMap.begin(); it != titleMap.end(); ++it)
 			{
 				double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
-				//OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
+				OFAnlayze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
 				totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
 			}
 		}
@@ -1068,8 +1068,6 @@ int main(int argc, char **argv) {
 		map<pair<string, string>, int> bodyMap;
 		//body 분석.
 		{
-			//string bodyAnalyzeTXT = "../../../../keyword manager DB1/3-0-1.final_body/" + thisTime + "analyzeResult.txt";
-			//ofstream ObodyAnalyze(bodyAnalyzeTXT);
 			vector<string> vs;
 			string apstr;
 			bool continuous = false;
@@ -1085,7 +1083,7 @@ int main(int argc, char **argv) {
 				{
 					if (continuous == true && cnt != 1)
 					{
-						//ObodyAnalyze << endl;
+						OFAnlayze << endl;
 						continuous = false;
 
 						for (int i = 0; i < cnt; ++i)
@@ -1117,7 +1115,7 @@ int main(int argc, char **argv) {
 					{
 						apstr.clear();
 						cnt = 0;
-						//ObodyAnalyze << endl;
+						OFAnlayze << endl;
 						continuous = false;
 					}
 					break;
@@ -1127,7 +1125,7 @@ int main(int argc, char **argv) {
 				{
 					if (continuous == true && cnt != 1)
 					{
-						//ObodyAnalyze << endl;
+						OFAnlayze << endl;
 						continuous = false;
 
 						for (int i = 0; i < cnt; ++i)
@@ -1159,7 +1157,7 @@ int main(int argc, char **argv) {
 					{
 						apstr.clear();
 						cnt = 0;
-						//ObodyAnalyze << endl;
+						OFAnlayze << endl;
 						continuous = false;
 					}
 					continue;
@@ -1182,14 +1180,14 @@ int main(int argc, char **argv) {
 
 				if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
 				{
-					//ObodyAnalyze << noun << '\t' << ty << endl;
+					OFAnlayze << noun << '\t' << ty << endl;
 					bodyMap[make_pair(noun, ty)]++;
 					apstr.append(noun + " ");
 					cnt++;
 				}
 				else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
 				{
-					//ObodyAnalyze << noun << '\t' << ty << endl;
+					OFAnlayze << noun << '\t' << ty << endl;
 					bodyMap[make_pair(noun, ty)]++;
 					continuous = true;
 					apstr.append(noun + " ");
@@ -1197,7 +1195,7 @@ int main(int argc, char **argv) {
 				}
 				else if (ty == "SL" && continuous == true)
 				{
-					//ObodyAnalyze << noun << '\t' << ty << endl;
+					OFAnlayze << noun << '\t' << ty << endl;
 					bodyMap[make_pair(noun, ty)]++;
 					continuous = false;
 
@@ -1230,12 +1228,12 @@ int main(int argc, char **argv) {
 				}
 				else if (ty == "SL")
 				{
-					//ObodyAnalyze << noun << '\t' << ty << endl;
+					OFAnlayze << noun << '\t' << ty << endl;
 					bodyMap[make_pair(noun, ty)]++;
 				}
 				else if (continuous == true && cnt != 1)
 				{
-					//ObodyAnalyze << endl;
+					OFAnlayze << endl;
 					continuous = false;
 
 					for (int i = 0; i < cnt; ++i)
@@ -1265,7 +1263,7 @@ int main(int argc, char **argv) {
 				}
 				else
 				{
-					//ObodyAnalyze << endl;
+					OFAnlayze << endl;
 					continuous = false;
 					cnt = 0;
 					apstr.erase();
@@ -1274,14 +1272,14 @@ int main(int argc, char **argv) {
 
 				found = found2 + 1;
 			}
-			//ObodyAnalyze << "----------------------------------------------------------------------------------" << endl;
+			OFAnlayze << "----------------------------------------------------------------------------------" << endl;
 
 			string ans;
 			double maxx = 0;
 			map<pair<string, string>, int>::iterator it;
 			for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
 			{
-				//ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+				OFAnlayze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
 				if (maxx < (*it).second)
 				{
 					maxx = (*it).second;
@@ -1289,12 +1287,12 @@ int main(int argc, char **argv) {
 				}
 			}
 
-			/*
-			ObodyAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
-			ObodyAnalyze << "keyword : " << ans;
-			ObodyAnalyze << endl << "----------------------------------------------------------------------------------";
-			ObodyAnalyze << endl;
-			*/
+			
+			OFAnlayze << endl << "----------------------------------------------------------------------------------" << endl;
+			OFAnlayze << "Bodykeyword : " << ans;
+			OFAnlayze << endl << "----------------------------------------------------------------------------------";
+			OFAnlayze << endl;
+			
 
 			for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
 			{
@@ -1304,24 +1302,38 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		string ans;
+		int size = totalMap.size();
+
+		map<pair<string, string>, double>::iterator it;
+
+		//출력확인
+		
+		ofstream otmp("../../../../keyword manager DB/4.total_TF_input/00.total_TF_input.txt");
+		
+		for (it = totalMap.begin(); it != totalMap.end(); ++it)
+		{
+			otmp << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+		}
+		
+
+	/*	string ans;
 		double maxx = 0;
 		map<pair<string, string>, int>::iterator it;
 		for (it = stringTypeNum.begin(); it != stringTypeNum.end(); ++it)
 		{
-			OmecabAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+			OFAnlayze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
 			if (maxx < (*it).second)
 			{
 				maxx = (*it).second;
 				ans = (*it).first.first;
 			}
-			numStringType.insert(pair<int, pair<string, string> >((*it).second, (*it).first));
+//			numStringType.insert(pair<int, pair<string, string> >((*it).second, (*it).first));
 		}
 
-		OmecabAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
-		OmecabAnalyze << "keyword : " << ans;
-		OmecabAnalyze << endl << "----------------------------------------------------------------------------------";
-		OmecabAnalyze << endl;
+		OFAnlayze << endl << "----------------------------------------------------------------------------------" << endl;
+		OFAnlayze << "keyword : " << ans;
+		OFAnlayze << endl << "----------------------------------------------------------------------------------";
+		OFAnlayze << endl;
 
 		ofstream OmecabTotalTF(mecabTotalTFTXT);
 
@@ -1384,7 +1396,7 @@ int main(int argc, char **argv) {
 		OLogTXT.close();
 		OIncreaseTXT.close();
 
-
+		*/
 
 
 
@@ -1420,17 +1432,16 @@ int main(int argc, char **argv) {
 		{
 			string noun, ty;
 
-
 			double DF;
 			getline(ISelectiveTDF, noun, '\t');
 			if (ISelectiveTDF.eof()) break;
 			ISelectiveTDF >> ty >> DF;
 
 			double countTF, booleanTF, LogTF, IncreaseTF;
-			countTF = countMap[make_pair(noun, ty)];
-			booleanTF = booleanMap[make_pair(noun, ty)];
-			LogTF = logMap[make_pair(noun, ty)];
-			IncreaseTF = increaseMap[make_pair(noun, ty)];
+			//countTF = countMap[make_pair(noun, ty)];
+			//booleanTF = booleanMap[make_pair(noun, ty)];
+			//LogTF = logMap[make_pair(noun, ty)];
+			IncreaseTF = totalMap[make_pair(noun, ty)];
 
 
 			//해당 단어의 IDF값을 구하고,
@@ -1438,14 +1449,14 @@ int main(int argc, char **argv) {
 			double IDF = log10(documentN / DF);
 
 			// 상황에 맞는 TF와 곱한다.
-			double cTFIDF = countTF * IDF;
-			double bTFIDF = booleanTF * IDF;
-			double lTFIDF = LogTF * IDF;
+			//double cTFIDF = countTF * IDF;
+			//double bTFIDF = booleanTF * IDF;
+			//double lTFIDF = LogTF * IDF;
 			double iTFIDF = IncreaseTF * IDF;
 
-			cTFIDFNounType.insert(make_pair(cTFIDF, make_pair(noun, ty)));
-			bTFIDFNounType.insert(make_pair(bTFIDF, make_pair(noun, ty)));
-			lTFIDFNounType.insert(make_pair(lTFIDF, make_pair(noun, ty)));
+			//cTFIDFNounType.insert(make_pair(cTFIDF, make_pair(noun, ty)));
+			//bTFIDFNounType.insert(make_pair(bTFIDF, make_pair(noun, ty)));
+			//lTFIDFNounType.insert(make_pair(lTFIDF, make_pair(noun, ty)));
 			iTFIDFNounType.insert(make_pair(iTFIDF, make_pair(noun, ty)));
 
 			string ttmp;
@@ -1453,18 +1464,18 @@ int main(int argc, char **argv) {
 			getline(ISelectiveTDF, ttmp, '\n');
 		}
 
-		string simpleCountTFIDFResult = "../../../../keyword manager DB/7-0.simple_count_TF-IDF/" + thisTime + " SimpleCountTFIDFAnalyzeResult.txt";
-		string BooleanTFIDFResult = "../../../../keyword manager DB/7-1.boolean_TF-IDF/" + thisTime + " BooleanTFIDFAnalyzeResult.txt";
-		string LogTFIDFResult = "../../../../keyword manager DB/7-2.log_TF-IDF/" + thisTime + " LogTFIDFAnalyzeResult.txt";
-		string IncreaseTFIDFResult = "../../../../keyword manager DB/7-3.increase_TF-IDF/" + thisTime + " IncreaseTFIDFAnalyzeResult.txt";
+		//string simpleCountTFIDFResult = "../../../../keyword manager DB/7-0.simple_count_TF-IDF/" + thisTime + " SimpleCountTFIDFAnalyzeResult.txt";
+		//string BooleanTFIDFResult = "../../../../keyword manager DB/7-1.boolean_TF-IDF/" + thisTime + " BooleanTFIDFAnalyzeResult.txt";
+		//string LogTFIDFResult = "../../../../keyword manager DB/7-2.log_TF-IDF/" + thisTime + " LogTFIDFAnalyzeResult.txt";
+		string IncreaseTFIDFResult = "../../../../keyword manager DB/7-4.F_TF-IDF/" + thisTime + " IncreaseTFIDFAnalyzeResult.txt";
 
-		ofstream OCountTFIDF(simpleCountTFIDFResult);
-		ofstream OBooleanTFIDF(BooleanTFIDFResult);
-		ofstream OLogTFIDF(LogTFIDFResult);
+		//ofstream OCountTFIDF(simpleCountTFIDFResult);
+		//ofstream OBooleanTFIDF(BooleanTFIDFResult);
+		//ofstream OLogTFIDF(LogTFIDFResult);
 		ofstream OIncreaseTFIDF(IncreaseTFIDFResult);
 
 
-		multimap<double, pair<string, string> >::reverse_iterator it3;
+		multimap<double, pair<string, string> >::reverse_iterator it3;/*
 		for (it3 = cTFIDFNounType.rbegin(); it3 != cTFIDFNounType.rend(); ++it3)
 		{
 			OCountTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
@@ -1478,7 +1489,7 @@ int main(int argc, char **argv) {
 		for (it3 = lTFIDFNounType.rbegin(); it3 != lTFIDFNounType.rend(); ++it3)
 		{
 			OLogTFIDF << it3->second.first << '\t' << it3->second.second << '\t' << it3->first << endl;
-		}
+		}*/
 
 		for (it3 = iTFIDFNounType.rbegin(); it3 != iTFIDFNounType.rend(); ++it3)
 		{

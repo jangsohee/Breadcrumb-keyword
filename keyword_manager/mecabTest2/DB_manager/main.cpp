@@ -140,7 +140,7 @@ int main()
 			double selectedNum = stringTypeNum[make_pair(str, ty)];
 
 			//***
-			OselectiveDF << str << '\t' << ty << '\t' << selectedNum+num << endl;
+			OselectiveDF << str << '\t' << ty << '\t' << selectedNum+1 << endl;
 			//***
 			//OselectiveDF << str << '\t' << ty << '\t' << selectedNum + 1 << '\t' << TF << endl;
 			
