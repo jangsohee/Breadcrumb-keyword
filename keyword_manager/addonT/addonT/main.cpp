@@ -37,11 +37,10 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
 
-	cout << "***  keyword analyzer(MECAB)  ***" << endl;
-	cout << "start!" << endl;
-
 	//실험 환경
 	/*
+	cout << "***  keyword analyzer(MECAB)  ***" << endl;
+	cout << "start!" << endl;
 	time_t timer = time(NULL);
 	tm* t = localtime(&timer);
 	string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
@@ -66,8 +65,8 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 	String::Utf8Value bodyParam(args[1]->ToString());
 	string body = *bodyParam;
 
-	String::Utf8Value lineTextParam(args[2]->ToString());
-	string linkText = *lineTextParam;
+	String::Utf8Value linkTextParam(args[2]->ToString());
+	string linkText = *linkTextParam;
 	String::Utf8Value parentKeywordParam(args[3]->ToString());
 	string parentKeyword = *parentKeywordParam;
 
@@ -80,6 +79,15 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 
 	const char *result2 = tagger->parse(body.c_str());
 	string Abody = result2;
+
+	string ALinkText="";
+	if (linkText != "")
+	{
+		const char *result3 = tagger->parse(linkText.c_str());
+		ALinkText = result3;
+	}
+	
+
 
 	//출력 확인
 	/*
@@ -328,6 +336,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 		OtitleAnalyze << endl;
 		*/
 
+//TitleText에 대한 가중치 : 0.5 ~ 1
 		for (it = titleMap.begin(); it != titleMap.end(); ++it)
 		{
 			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
@@ -567,6 +576,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 		ObodyAnalyze << endl;
 		*/
 
+//body에 대한 가중치 : 0.5 ~ 1
 		for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
 		{
 			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
@@ -574,6 +584,249 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
 		}
 	}
+
+	map<pair<string, string>, int> linkMap;
+	//linkText 분석.
+	if (ALinkText != "")
+	{
+		//string bodyAnalyzeTXT = "../../../../keyword manager DB1/3-0-1.final_body/" + thisTime + "analyzeResult.txt";
+		//ofstream ObodyAnalyze(bodyAnalyzeTXT);
+		vector<string> vs;
+		string apstr;
+		bool continuous = false;
+		int cnt = 0;
+		size_t found = 0, found2;
+
+		while (1)
+		{
+			found2 = ALinkText.find('\n', found);
+			string line = ALinkText.substr(found, found2 - found);
+
+			if (found2 == std::string::npos || line == "EOS")
+			{
+				if (continuous == true && cnt != 1)
+				{
+					//ObodyAnalyze << endl;
+					continuous = false;
+
+					for (int i = 0; i < cnt; ++i)
+					{
+						int j = apstr.find(" ");
+						string tmp = apstr.substr(0, j);
+						apstr.erase(0, j + 1);
+						vs.push_back(tmp);
+					}
+					apstr.erase();
+
+					//apstr 작업
+					for (int i = 2; i <= cnt; ++i)
+					{
+						for (int k = 0; k + i <= vs.size(); ++k)
+						{
+							string appendStr;
+							for (int j = 0; j < i; ++j)
+							{
+								appendStr += (vs[k + j] + " ");
+							}
+							linkMap[make_pair(appendStr, "MyCompound")]++;
+						}
+					}
+					vs.clear();
+					cnt = 0;
+				}
+				else if (continuous == true && cnt == 1)
+				{
+					apstr.clear();
+					cnt = 0;
+					//ObodyAnalyze << endl;
+					continuous = false;
+				}
+				break;
+			}
+
+			if (line.empty() || line[0] == '\t' || line == "EOS")
+			{
+				if (continuous == true && cnt != 1)
+				{
+					//ObodyAnalyze << endl;
+					continuous = false;
+
+					for (int i = 0; i < cnt; ++i)
+					{
+						int j = apstr.find(" ");
+						string tmp = apstr.substr(0, j);
+						apstr.erase(0, j + 1);
+						vs.push_back(tmp);
+					}
+					apstr.erase();
+
+					//apstr 작업
+					for (int i = 2; i <= cnt; ++i)
+					{
+						for (int k = 0; k + i <= vs.size(); ++k)
+						{
+							string appendStr;
+							for (int j = 0; j < i; ++j)
+							{
+								appendStr += (vs[k + j] + " ");
+							}
+							linkMap[make_pair(appendStr, "MyCompound")]++;
+						}
+					}
+					vs.clear();
+					cnt = 0;
+				}
+				else if (continuous == true && cnt == 1)
+				{
+					apstr.clear();
+					cnt = 0;
+					//ObodyAnalyze << endl;
+					continuous = false;
+				}
+				continue;
+			}
+
+			size_t pos = line.find('\t');
+			string noun = line.substr(0, pos);
+
+			if (noun == "﻿")
+			{
+				cout << "?" << line << endl;
+			}
+
+			size_t dotPos = line.find(',', pos + 1);
+			string ty = line.substr(pos + 1, dotPos - pos - 1);
+
+
+			// 영어 단어의 비율 체크 해보자.
+			// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
+
+			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
+			{
+				//ObodyAnalyze << noun << '\t' << ty << endl;
+				linkMap[make_pair(noun, ty)]++;
+				apstr.append(noun + " ");
+				cnt++;
+			}
+			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
+			{
+				//ObodyAnalyze << noun << '\t' << ty << endl;
+				linkMap[make_pair(noun, ty)]++;
+				continuous = true;
+				apstr.append(noun + " ");
+				cnt++;
+			}
+			else if (ty == "SL" && continuous == true)
+			{
+				//ObodyAnalyze << noun << '\t' << ty << endl;
+				linkMap[make_pair(noun, ty)]++;
+				continuous = false;
+
+				//vs벡터에 단어 하나하나 저장.
+				for (int i = 0; i < cnt; ++i)
+				{
+					int j = apstr.find(" ");
+					string tmp = apstr.substr(0, j);
+					apstr.erase(0, j + 1);
+					vs.push_back(tmp);
+				}
+				apstr.erase();
+
+				//apstr 작업. 복합명사 만들어서 세어보는중.
+				for (int i = 2; i <= cnt; ++i)
+				{
+					for (int k = 0; k + i <= vs.size(); ++k)
+					{
+						string appendStr;
+						for (int j = 0; j < i; ++j)
+						{
+							appendStr += (vs[k + j] + " ");
+						}
+						linkMap[make_pair(appendStr, "MyCompound")]++;
+					}
+				}
+				vs.clear();
+				cnt = 0;
+
+			}
+			else if (ty == "SL")
+			{
+				//ObodyAnalyze << noun << '\t' << ty << endl;
+				linkMap[make_pair(noun, ty)]++;
+			}
+			else if (continuous == true && cnt != 1)
+			{
+				//ObodyAnalyze << endl;
+				continuous = false;
+
+				for (int i = 0; i < cnt; ++i)
+				{
+					int j = apstr.find(" ");
+					string tmp = apstr.substr(0, j);
+					apstr.erase(0, j + 1);
+					vs.push_back(tmp);
+				}
+				apstr.erase();
+
+				//apstr 작업
+				for (int i = 2; i <= cnt; ++i)
+				{
+					for (int k = 0; k + i <= vs.size(); ++k)
+					{
+						string appendStr;
+						for (int j = 0; j < i; ++j)
+						{
+							appendStr += (vs[k + j] + " ");
+						}
+						linkMap[make_pair(appendStr, "MyCompound")]++;
+					}
+				}
+				vs.clear();
+				cnt = 0;
+			}
+			else
+			{
+				//ObodyAnalyze << endl;
+				continuous = false;
+				cnt = 0;
+				apstr.erase();
+			}
+
+
+			found = found2 + 1;
+		}
+		//ObodyAnalyze << "----------------------------------------------------------------------------------" << endl;
+
+		string ans;
+		double maxx = 0;
+		map<pair<string, string>, int>::iterator it;
+		for (it = linkMap.begin(); it != linkMap.end(); ++it)
+		{
+			//ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << (*it).second << endl;
+			if (maxx < (*it).second)
+			{
+				maxx = (*it).second;
+				ans = (*it).first.first;
+			}
+		}
+
+		/*
+		ObodyAnalyze << endl << "----------------------------------------------------------------------------------" << endl;
+		ObodyAnalyze << "keyword : " << ans;
+		ObodyAnalyze << endl << "----------------------------------------------------------------------------------";
+		ObodyAnalyze << endl;
+		*/
+
+
+//linkText에 대한 가중치 : 0~0.5
+		for (it = linkMap.begin(); it != linkMap.end(); ++it)
+		{
+			double increaseTF = 0 + (0.5 * (*it).second) / maxx;
+			//ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
+			totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
+		}
+	}
+
 
 	int size = totalMap.size();
 
@@ -613,6 +866,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 	obj->Set(String::NewFromUtf8(isolate, "noun"), nn);
 	obj->Set(String::NewFromUtf8(isolate, "nounType"), nt);
 	obj->Set(String::NewFromUtf8(isolate, "TF"), ff);
+	obj->Set(String::NewFromUtf8(isolate, "ParentKeyword"), String::NewFromUtf8(isolate, parentKeyword.c_str()));
 
 	args.GetReturnValue().Set(obj);
 }
@@ -621,10 +875,11 @@ void funcExtract(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
 
+	
+//실험환경
+	/*
 	cout << "calculate!" << endl;
 
-	//실험환경
-	/*
 	time_t timer = time(NULL);
 	tm* t = localtime(&timer);
 	string thisTime = to_string(t->tm_year - 100) + "-" + to_string(t->tm_mon + 1) + "-" + to_string(t->tm_mday) + "-"
@@ -662,15 +917,16 @@ void funcExtract(const FunctionCallbackInfo<Value>& args) {
 	}
 	*/
 
-	//서버 환경
+//서버 환경
 	multimap<double, pair<string, string> > TFIDFNounType;
 
 	int documentN = args[0]->Int32Value();
-
 	Local<Array> Anoun = Local<Array>::Cast(args[1]);
 	Local<Array> AnounType = Local<Array>::Cast(args[2]);
 	Local<Array> ADF = Local<Array>::Cast(args[3]);
 	Local<Array> ATF = Local<Array>::Cast(args[4]);
+	String::Utf8Value parentKeywordParam(args[5]->ToString());
+	string parentKeyword = *parentKeywordParam;
 
 	int arSize = Anoun->Length();
 
@@ -708,8 +964,14 @@ void funcExtract(const FunctionCallbackInfo<Value>& args) {
 	*/
 
 	Local<Array> keyword = Array::New(isolate, 1);
-	keyword->Set(0, String::NewFromUtf8(isolate, TFIDFNounType.rbegin()->second.first.c_str()));
-
+	multimap<double, pair<string, string> >::reverse_iterator it = TFIDFNounType.rbegin();
+	
+	//만약 부모키워드와 같을 시
+	if (parentKeyword!="" && it->second.first == parentKeyword)
+		it++;
+	
+	keyword->Set(0, String::NewFromUtf8(isolate, it->second.first.c_str()));
+	
 	args.GetReturnValue().Set(keyword);
 }
 
