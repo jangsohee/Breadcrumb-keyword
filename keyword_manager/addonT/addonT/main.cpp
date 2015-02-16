@@ -14,6 +14,7 @@
 #include <io.h>
 #include <conio.h>
 #include <mecab.h>
+#include <utility>
 
 #include "header.h"
 
@@ -32,6 +33,7 @@ using std::cout;
 using std::cin;
 using std::ofstream;
 using std::ifstream;
+using std::make_pair;
 
 void funcTF(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
@@ -222,14 +224,14 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			// 영어 단어의 비율 체크 해보자.
 			// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
 
-			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
+			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" || ty == "VV+ETN") && continuous == true)
 			{
 				//OtitleAnalyze << noun << '\t' << ty << endl;
 				titleMap[make_pair(noun, ty)]++;
 				apstr.append(noun + " ");
 				cnt++;
 			}
-			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
+			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" || ty == "VV+ETN")
 			{
 				//OtitleAnalyze << noun << '\t' << ty << endl;
 				titleMap[make_pair(noun, ty)]++;
@@ -336,14 +338,19 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 		OtitleAnalyze << endl;
 		*/
 
-//TitleText에 대한 가중치 : 0.5 ~ 1
+//TitleText에 대한 가중치 : 0 ~ 0.5
 		for (it = titleMap.begin(); it != titleMap.end(); ++it)
 		{
-			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
+			double increaseTF = 0 + (0.5 * (*it).second) / maxx;
 			//OtitleAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
 			totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
 		}
 	}
+
+	map<pair<string, string>, vector<int> > locMap;
+	map<pair<string, string>, pair<double, double> > mga;
+	double maxMga = -9;
+	int loc = 0;
 
 	map<pair<string, string>, int> bodyMap;
 	//body 분석.
@@ -388,6 +395,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 								appendStr += (vs[k + j] + " ");
 							}
 							bodyMap[make_pair(appendStr, "MyCompound")]++;
+							locMap[make_pair(appendStr, "MyCompound")].push_back(loc - cnt + k);
 						}
 					}
 					vs.clear();
@@ -430,6 +438,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 								appendStr += (vs[k + j] + " ");
 							}
 							bodyMap[make_pair(appendStr, "MyCompound")]++;
+							locMap[make_pair(appendStr, "MyCompound")].push_back(loc - cnt + k);
 						}
 					}
 					vs.clear();
@@ -448,10 +457,10 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			size_t pos = line.find('\t');
 			string noun = line.substr(0, pos);
 
-			if (noun == "﻿")
+			/*if (noun == "﻿")
 			{
 				cout << "?" << line << endl;
-			}
+			}*/
 
 			size_t dotPos = line.find(',', pos + 1);
 			string ty = line.substr(pos + 1, dotPos - pos - 1);
@@ -459,18 +468,56 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 
 			// 영어 단어의 비율 체크 해보자.
 			// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
-
-			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
+			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" || ty == "VV+ETN") && cnt > 5)
 			{
-				//ObodyAnalyze << noun << '\t' << ty << endl;
+				//vs벡터에 단어 하나하나 저장.
+				for (int i = 0; i < cnt; ++i)
+				{
+					int j = apstr.find(" ");
+					string tmp = apstr.substr(0, j);
+					apstr.erase(0, j + 1);
+					vs.push_back(tmp);
+				}
+				apstr.erase();
+
+				//apstr 작업. 복합명사 만들어서 세어보는중.
+				for (int i = 2; i <= cnt; ++i)
+				{
+					for (int k = 0; k + i <= vs.size(); ++k)
+					{
+						string appendStr;
+						for (int j = 0; j < i; ++j)
+						{
+							appendStr += (vs[k + j] + " ");
+						}
+						bodyMap[make_pair(appendStr, "MyCompound")]++;
+						locMap[make_pair(appendStr, "MyCompound")].push_back(loc - cnt + k);
+						
+					}
+				}
+				vs.clear();
+				cnt = 0;
+
+			
 				bodyMap[make_pair(noun, ty)]++;
+				locMap[make_pair(noun, ty)].push_back(loc);
+				
 				apstr.append(noun + " ");
 				cnt++;
 			}
-			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
+			else if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" || ty == "VV+ETN") && continuous == true)
 			{
 				//ObodyAnalyze << noun << '\t' << ty << endl;
 				bodyMap[make_pair(noun, ty)]++;
+				locMap[make_pair(noun, ty)].push_back(loc);
+				apstr.append(noun + " ");
+				cnt++;
+			}
+			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" || ty == "VV+ETN")
+			{
+				//ObodyAnalyze << noun << '\t' << ty << endl;
+				bodyMap[make_pair(noun, ty)]++;
+				locMap[make_pair(noun, ty)].push_back(loc);
 				continuous = true;
 				apstr.append(noun + " ");
 				cnt++;
@@ -479,6 +526,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			{
 				//ObodyAnalyze << noun << '\t' << ty << endl;
 				bodyMap[make_pair(noun, ty)]++;
+				locMap[make_pair(noun, ty)].push_back(loc);
 				continuous = false;
 
 				//vs벡터에 단어 하나하나 저장.
@@ -502,6 +550,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 							appendStr += (vs[k + j] + " ");
 						}
 						bodyMap[make_pair(appendStr, "MyCompound")]++;
+						locMap[make_pair(appendStr, "MyCompound")].push_back(loc - cnt + k);
 					}
 				}
 				vs.clear();
@@ -512,6 +561,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			{
 				//ObodyAnalyze << noun << '\t' << ty << endl;
 				bodyMap[make_pair(noun, ty)]++;
+				locMap[make_pair(noun, ty)].push_back(loc);
 			}
 			else if (continuous == true && cnt != 1)
 			{
@@ -538,6 +588,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 							appendStr += (vs[k + j] + " ");
 						}
 						bodyMap[make_pair(appendStr, "MyCompound")]++;
+						locMap[make_pair(appendStr, "MyCompound")].push_back(loc - cnt + k);
 					}
 				}
 				vs.clear();
@@ -551,7 +602,7 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 				apstr.erase();
 			}
 
-
+			loc++;
 			found = found2 + 1;
 		}
 		//ObodyAnalyze << "----------------------------------------------------------------------------------" << endl;
@@ -576,13 +627,60 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 		ObodyAnalyze << endl;
 		*/
 
-//body에 대한 가중치 : 0.5 ~ 1
+//body에 대한 가중치 : 0 ~ 4
 		for (it = bodyMap.begin(); it != bodyMap.end(); ++it)
 		{
-			double increaseTF = 0.5 + (0.5 * (*it).second) / maxx;
+			double increaseTF = 0 + (4 * (*it).second) / maxx;
 			//ObodyAnalyze << (*it).first.first << '\t' << (*it).first.second << '\t' << increaseTF << endl;
 			totalMap[make_pair((*it).first.first, (*it).first.second)] += increaseTF;
 		}
+
+		map<pair<string, string>, vector<int> >::iterator itloc;
+		vector<pair<string, string> >sPair;
+		for (itloc = locMap.begin(); itloc != locMap.end(); ++itloc)
+		{
+			if (itloc->second.size() == 1 || itloc->second.size() == 2)
+			{
+				sPair.push_back(make_pair(itloc->first.first, itloc->first.second));
+				continue;
+			}
+			sort(itloc->second.begin(), itloc->second.end());
+		}
+		
+
+		for (int i = 0; i < sPair.size(); ++i)
+		{
+			locMap.erase(make_pair(sPair[i].first, sPair[i].second));
+		}
+
+		for (itloc = locMap.begin(); itloc != locMap.end(); ++itloc)
+		{
+			vector<int> vi = itloc->second;
+			double len = vi[vi.size() - 1] - vi[0];
+
+			//퍼져있는가
+			double ga = log10((len / loc + 1));
+
+			double cent = vi[0] + (len / 2);
+
+			//분포도 좁게 있을 수록 높은 값
+			double ga2 = 0; //역수 취해야
+			for (int i = 0; i < vi.size(); ++i)
+			{
+				ga2 += (cent - vi[i])*(cent - vi[i]);
+			}
+
+			ga2 = sqrt(ga2);
+			//ga2를 정규화 시키면 될듯 하다 그래 이제 이해했다
+			double iga2 = 1 / ga2;
+			
+			mga.insert(make_pair(make_pair(itloc->first.first, itloc->first.second), make_pair(ga, iga2)));
+			if (maxMga < iga2) maxMga = iga2;
+		}
+		//****		
+
+		
+
 	}
 
 	map<pair<string, string>, int> linkMap;
@@ -701,14 +799,14 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 			// 영어 단어의 비율 체크 해보자.
 			// 총 단어도 같이 세어보자. tf모델의 변형 가능성 열어두기 위함.
 
-			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP") && continuous == true)
+			if ((ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" ||ty=="VV+ETN") && continuous == true)
 			{
 				//ObodyAnalyze << noun << '\t' << ty << endl;
 				linkMap[make_pair(noun, ty)]++;
 				apstr.append(noun + " ");
 				cnt++;
 			}
-			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP")
+			else if (ty == "NNG" || ty == "NNP" || ty == "NNB" || ty == "NNBC" || ty == "NR" || ty == "NP" || ty == "VV+ETN")
 			{
 				//ObodyAnalyze << noun << '\t' << ty << endl;
 				linkMap[make_pair(noun, ty)]++;
@@ -827,6 +925,19 @@ void funcTF(const FunctionCallbackInfo<Value>& args) {
 		}
 	}
 
+	map<pair<string, string>, pair<double, double> >::iterator mgaIt;
+	for (mgaIt = mga.begin(); mgaIt != mga.end(); ++mgaIt)
+	{
+		double g1 = mgaIt->second.first;
+		double g2 = mgaIt->second.second;
+		double gg2 = 0.1 + (g2 / maxMga) * 0.1;
+
+		double fg = gg2*g1 * 10;
+		double tt = totalMap[make_pair(mgaIt->first.first, mgaIt->first.second)];
+		tt += fg;
+		cout << tt << endl;
+		totalMap[make_pair(mgaIt->first.first, mgaIt->first.second)] = tt;
+	}
 
 	int size = totalMap.size();
 
@@ -911,7 +1022,8 @@ void funcExtract(const FunctionCallbackInfo<Value>& args) {
 //서버 환경
 	multimap<double, pair<string, string> > TFIDFNounType;
 
-	int documentN = args[0]->Int32Value();
+//****
+	int documentN = args[0]->Int32Value() + 32125;
 	Local<Array> Anoun = Local<Array>::Cast(args[1]);
 	Local<Array> AnounType = Local<Array>::Cast(args[2]);
 	Local<Array> ADF = Local<Array>::Cast(args[3]);
